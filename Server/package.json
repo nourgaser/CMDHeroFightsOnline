@@ -1,0 +1,19 @@
+{
+  "name": "Server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "install": "^0.13.0",
+    "nodemon": "^2.0.7",
+    "npm": "^7.6.3",
+    "shortid": "^2.2.16",
+    "socket.io": "^2.1.1"
+  }
+}
