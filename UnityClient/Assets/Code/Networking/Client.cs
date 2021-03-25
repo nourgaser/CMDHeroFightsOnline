@@ -1,5 +1,7 @@
 using UnityEngine;
+using System.Collections.Generic;
 using H.Socket.IO;
+using Newtonsoft.Json;
 public class Client : MonoBehaviour
 {
     private static readonly System.Uri url = new System.Uri("http://localhost:8080/socket.io/");
@@ -24,8 +26,15 @@ public class Client : MonoBehaviour
         });
         client.On("actions", (e) =>
         {
-            Debug.Log(e as string);
+            Debug.Log(e);
+            List<Action> actions = JsonConvert.DeserializeObject<List<Action>>(e);
+            actions.ForEach(action =>
+            {
+                Debug.Log(action.name);
+            });
+
         });
+
         connect();
     }
 

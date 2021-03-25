@@ -24,8 +24,17 @@ class Hero {
         console.log();
     }
     emitAvailableActions(){
-        this.stats["socket"].value.emit("actions", this.actions);
-        console.log(this.actions);
+        var clientActions = new Array();
+        for (var actionID in this.actions) {
+            var clientAction = {
+                name: this.actions[actionID].name,
+                moveCost: this.actions[actionID].moveCost,
+                isRepeatable: this.actions[actionID].isRepeatable,
+            }
+            clientActions.push(clientAction);
+        }
+        this.stats["socket"].value.emit("actions", clientActions);
+        console.log(clientActions);
     }
 };
 module.exports = Hero;
