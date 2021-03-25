@@ -4,7 +4,14 @@ public class Client : MonoBehaviour
 {
     private static readonly System.Uri url = new System.Uri("http://localhost:8080/socket.io/");
 
-    SocketIoClient client = new SocketIoClient();
+    public SocketIoClient client = new SocketIoClient();
+
+
+    public GameObject networkContainer;
+
+    private void Awake()
+    {
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -12,6 +19,10 @@ public class Client : MonoBehaviour
         client.Connected += Client_Connected;
         client.Disconnected += Client_Disconnected;
         client.On("message", (e) =>
+        {
+            Debug.Log(e as string);
+        });
+        client.On("actions", (e) =>
         {
             Debug.Log(e as string);
         });
@@ -26,7 +37,6 @@ public class Client : MonoBehaviour
     private async void connect()
     {
         await client.ConnectAsync(url);
-        await client.Emit("message", "HIII NODE! I connected.");
     }
 
     private void Client_Connected(object sender, H.Socket.IO.EventsArgs.SocketIoEventEventArgs e)
@@ -38,4 +48,12 @@ public class Client : MonoBehaviour
     void Update()
     {
     }
+
+    void OnApplicationQuit()
+    {
+        client.Emit("disconnect", "Disconnected.");
+        client.DisconnectAsync();
+        client.Dispose();
+    }
+
 }
