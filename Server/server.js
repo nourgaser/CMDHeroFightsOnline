@@ -13,6 +13,7 @@ io.on('connection', socket => {
   console.log("Clients connected: " + players.length);
   
   if (players.length == 2) {
+    players[1] = new Hero("mage", socket);
     createGame(players[0], players[1]);
   }
 
@@ -37,4 +38,4 @@ var createGame = (p1, p2) => {
 //   console.log("Number of clients: " + players.length);
 // }, 10000);
 
-console.log("Now listeing on 8080...");
+console.log("Now listening on 8080...");

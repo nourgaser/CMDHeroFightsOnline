@@ -4,7 +4,7 @@ using H.Socket.IO;
 using Newtonsoft.Json;
 public class Client : MonoBehaviour
 {
-    private static readonly System.Uri url = new System.Uri("http://localhost:8080/socket.io/");
+    private static readonly System.Uri url = new System.Uri("http://192.168.1.104:8080/socket.io/");
 
     public SocketIoClient client = new SocketIoClient();
 
@@ -28,11 +28,30 @@ public class Client : MonoBehaviour
         {
             Debug.Log(e);
             List<Action> actions = JsonConvert.DeserializeObject<List<Action>>(e);
-            actions.ForEach(action =>
+            Hero.actions = actions;
+            ActionButtons.ActionButtonsManager.actionsChanged = true;
+        });
+        client.On("yourStats", (e) =>
+        {
+            Debug.Log(e);
+            List<Stat> stats = JsonConvert.DeserializeObject<List<Stat>>(e);
+            Hero.stats = stats;
+            Hero.stats.ForEach(stat =>
             {
-                Debug.Log(action.name);
+                Debug.Log("YOU: "+stat.name + ": " + stat.value);
             });
-
+            UI.UIManager.statsChanged = true;
+        });
+        client.On("opponentStats", (e) =>
+        {
+            Debug.Log(e);
+            List<Stat> stats = JsonConvert.DeserializeObject<List<Stat>>(e);
+            Hero.opponentStats = stats;
+            Hero.opponentStats.ForEach(stat =>
+            {
+                Debug.Log("OPPONENT: " + stat.name + ": " + stat.value);
+            });
+            UI.UIManager.statsChanged = true;
         });
 
         connect();

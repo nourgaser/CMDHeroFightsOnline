@@ -30,7 +30,7 @@ class Match {
             this.takeTurn();
         });
 
-        
+
         this.gameController.on('actionTaken', () => {
             if (this.attacker.stats["moves"].value > 0) {
                 this.takeAction();
@@ -40,27 +40,38 @@ class Match {
                 console.log("Advancing turn...");
             }
         });
-        
+
+        this.emitAllStats();
         this.takeTurn();
     }
-    
+
     takeTurn() {
         this.attacker.stats["moves"].value = this.moves;
+        this.attacker.stats["socket"].value.emit('turnStarted');
+        this.emitAllStats();
         this.takeAction();
     }
 
     takeAction() {
         this.attacker.emitAvailableActions();
-        console.log("Actions sent to attacker");
         this.attacker.stats["socket"].value.once('action', (e) => {
-            //do action
-            this.attacker.stats["moves"].value -= 1;
+
+            this.attacker.actions[e].invoke(this.attacker, this.defender);
+            this.attacker.stats["moves"].value -= this.attacker.actions[e].moveCost;
             console.log(e);
+
+            this.emitAllStats();
             this.gameController.emit('actionTaken');
         });
     }
 
-
+    //sends all stats to both players
+    emitAllStats() {
+        this.attacker.emitStats();
+        this.defender.emitOpponentStats(this.attacker);
+        this.defender.emitStats();
+        this.attacker.emitOpponentStats(this.defender);
+    }
 }
 
 module.exports = Match;

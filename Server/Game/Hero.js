@@ -16,14 +16,42 @@ class Hero {
         this.stats["socket"] = new Stat("socket", socket);
         this.classID = classID;
     }
-    showStats(){
-        console.log();
-        for(var statID in this.stats){
-            console.log(this.stats[statID].name + ": " + this.stats[statID].value);
+
+    //send this hero's stats to theirself
+    emitStats() {
+        var clientStats = new Array();
+        for (var statID in this.stats) {
+            if (this.stats[statID].name === "socket") continue;
+            var clientStat = {
+                name: this.stats[statID].name,
+                value: this.stats[statID].value
+            }
+            clientStats.push(clientStat);
         }
-        console.log();
+        console.log("Stats sent...");
+        this.stats["socket"].value.emit("yourStats", clientStats);
     }
-    emitAvailableActions(){
+
+    //send this hero's stats to their opponent
+    emitOpponentStats(opponentHero) {
+        var clientStats = new Array();
+        for (var statID in this.stats) {
+            if (this.stats[statID].name === "socket" /*|| other stats ignored here*/) continue;
+            var clientStat = {
+                name: this.stats[statID].name,
+                value: this.stats[statID].value
+            }
+            clientStats.push(clientStat);
+        }
+        console.log("Stats sent...");
+        opponentHero.stats["socket"].value.emit("opponentStats", clientStats);
+    }
+
+    emitAvailableActions() {
+        //TODO: test this
+        // var clientActions = JSON.stringify(this.actions, ['name', 'moveCost', 'isRepeatable']);
+        // this.stats["socket"].value.emit("actions", clientActions);
+
         var clientActions = new Array();
         for (var actionID in this.actions) {
             var clientAction = {
@@ -34,7 +62,7 @@ class Hero {
             clientActions.push(clientAction);
         }
         this.stats["socket"].value.emit("actions", clientActions);
-        console.log(clientActions);
+        console.log("Actions sent to attacker!");
     }
 };
 module.exports = Hero;
