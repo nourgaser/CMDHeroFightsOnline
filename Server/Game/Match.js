@@ -7,6 +7,7 @@ class Match {
     gameController = new EventEmitter();
     turn = 1;
     moves = 3;
+    turnCounter = 0;
     constructor(player1, player2) {
         this.player1 = player1;
         this.player2 = player2;
@@ -14,6 +15,8 @@ class Match {
         this.startMatch();
     }
 
+    /*match setup: initialization and adding gameController listeners, 
+    then signaling for first turn to start the turn loop*/
     startMatch() {
         this.attacker = this.player1;
         this.defender = this.player2;
@@ -28,8 +31,11 @@ class Match {
 
             this.attacker = (this.attacker === this.player1) ? this.player2 : this.player1;
             this.defender = (this.defender === this.player1) ? this.player2 : this.player1;
-            this.turn++;
-            this.moves++;
+            this.turnCounter++;
+            if (this.turnCounter % 2 == 0) {
+                this.turn++;
+                if (this.turnCounter < 16) this.moves++;
+            }
             console.log(`turn : ${this.turn}`);
             this.takeTurn();
         });
@@ -44,9 +50,11 @@ class Match {
             }
         });
 
+        this.defender.emitAvailableActions();
         this.takeTurn();
     }
 
+    //setup turn and take first action to start the action-move loop
     takeTurn() {
         this.attacker.stats["moves"].value = this.moves;
         this.attacker.stats["socket"].value.emit('turnStarted', "");
@@ -57,6 +65,7 @@ class Match {
         this.takeAction();
     }
 
+    //emit the available actions to the attacker client and listen for their action and invoke it
     takeAction() {
         this.attacker.emitAvailableActions();
         this.attacker.stats["socket"].value.once('action', (e) => {

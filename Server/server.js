@@ -25,6 +25,7 @@ io.on('connection', socket => {
         players.pop(player);
       }
     })
+
   });
 
 });
