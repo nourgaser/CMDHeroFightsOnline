@@ -6,6 +6,7 @@ namespace ActionButtons
 {
     public class ActionButtonsManager : MonoBehaviour
     {
+        private Button endTurnButton;
         private List<Button> actionButtons = new List<Button>();
         //private Button btn;
         private Client networking;
@@ -14,6 +15,7 @@ namespace ActionButtons
 
         private void Awake()
         {
+            endTurnButton = GameObject.FindGameObjectWithTag("endTurnButton").GetComponent<Button>();
             GameObject[] temp = GameObject.FindGameObjectsWithTag("actionButtons");
             foreach (GameObject action in temp)
             {
@@ -36,19 +38,35 @@ namespace ActionButtons
 
         public void updateActionButtons()
         {
+            actionButtons.ForEach(button =>
+            {
+                button.transform.GetChild(0).gameObject.GetComponent<Text>().text = "";
+                button.onClick.RemoveAllListeners();
+                button.transform.gameObject.SetActive(false);
+            });
             int i = 0;
             Hero.actions.ForEach(action =>
             {
+                actionButtons[i].transform.gameObject.SetActive(true);
                 actionButtons[i].transform.GetChild(0).gameObject.GetComponent<Text>().text = action.name;
+                actionButtons[i].onClick.RemoveAllListeners();
                 actionButtons[i].onClick.AddListener(() =>
                 {
                     networking.client.Emit("action", action.name);
-                    //actionButtons[i].interactable = false;
+                    //actionButtons[i].transform.gameObject.SetActive(false);
                     Debug.Log("Button clicked");
                 }); 
-                //actionButtons[i].transform.gameObject.SetActive(true);
                 i++;
             });
+
+            endTurnButton.onClick.RemoveAllListeners();
+            endTurnButton.onClick.AddListener(() =>
+            {
+                networking.client.Emit("turnEnded");
+                Debug.Log("Ending turn..");
+                endTurnButton.interactable = false;
+            });
+            endTurnButton.interactable = true;
         }
 
         // Update is called once per frame

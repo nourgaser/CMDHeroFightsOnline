@@ -1,5 +1,6 @@
 const AllClasses = require('./Classes/All');
 const Stat = require('./Stat');
+const Action = require('./Action');
 
 class Hero {
     stats = [];
@@ -14,6 +15,11 @@ class Hero {
         }
         this.stats["moves"] = new Stat("moves", 3);
         this.stats["socket"] = new Stat("socket", socket);
+        this.actions["hunkerDown"] = new Action("hunkerDown", 1, false, (attacker, defender) => {
+            attacker.stats["dodgeChance"].value += 0.3;
+        }, (attacker) => {
+            return true;
+        });
         this.classID = classID;
     }
 
@@ -28,7 +34,6 @@ class Hero {
             }
             clientStats.push(clientStat);
         }
-        console.log("Stats sent...");
         this.stats["socket"].value.emit("yourStats", clientStats);
     }
 
@@ -43,7 +48,6 @@ class Hero {
             }
             clientStats.push(clientStat);
         }
-        console.log("Stats sent...");
         opponentHero.stats["socket"].value.emit("opponentStats", clientStats);
     }
 
@@ -54,12 +58,15 @@ class Hero {
 
         var clientActions = new Array();
         for (var actionID in this.actions) {
-            var clientAction = {
-                name: this.actions[actionID].name,
-                moveCost: this.actions[actionID].moveCost,
-                isRepeatable: this.actions[actionID].isRepeatable,
+            if (this.stats["moves"].value >= this.actions[actionID].moveCost && this.actions[actionID].conditionMet(this)) {
+                var clientAction = {
+                    name: this.actions[actionID].name,
+                    moveCost: this.actions[actionID].moveCost,
+                    isRepeatable: this.actions[actionID].isRepeatable,
+                }
+                clientActions.push(clientAction);
             }
-            clientActions.push(clientAction);
+            else continue;
         }
         this.stats["socket"].value.emit("actions", clientActions);
         console.log("Actions sent to attacker!");

@@ -9,13 +9,14 @@ namespace UI
 
         private GameObject[] yourStatsTextArr;
         private GameObject[] opponentStatsTextArr;
-
+        private Client networking;
 
         private void Awake()
         {
             yourStatsTextArr = GameObject.FindGameObjectsWithTag("UIStatYours");
             opponentStatsTextArr = GameObject.FindGameObjectsWithTag("UIStatOpponent");
-    }
+            networking = GameObject.Find("[  Code - Networking ]").GetComponent<Client>();
+        }
 
         // Start is called before the first frame update
         void Start()
@@ -26,20 +27,10 @@ namespace UI
         public void updateUIStats()
         {
             Debug.Log("UI stats updated!");
+            int i = 0;
             Hero.stats.ForEach(Stat => {
-                if (Stat.name == "hp")
-                {
-                    yourStatsTextArr[0].GetComponent<Text>().text = "HP : " + Stat.value;
-                }
-                if (Stat.name == "class")
-                {
-                    yourStatsTextArr[1].GetComponent<Text>().text = "Class : " + Stat.value;
-
-                }
-                if (Stat.name == "moves")
-                {
-                    yourStatsTextArr[2].GetComponent<Text>().text = "Moves : " + Stat.value;
-                }
+                yourStatsTextArr[i].GetComponent<Text>().text = Stat.name + ": " + Stat.value;
+                i++;
             });
             Hero.opponentStats.ForEach(Stat => {
                 if (Stat.name == "hp")

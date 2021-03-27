@@ -19,6 +19,7 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     console.log("Client disconnected!");
+    console.log("Clients connected: " + players.length);
     players.forEach(player => {
       if (player.stats["socket"].value === socket) {
         players.pop(player);

@@ -5,7 +5,7 @@ class Match {
     attacker;
     defender;
     gameController = new EventEmitter();
-    turn;
+    turn = 1;
     moves = 3;
     constructor(player1, player2) {
         this.player1 = player1;
@@ -23,10 +23,14 @@ class Match {
         // });
 
         this.gameController.on('advanceTurn', () => {
+            this.attacker.stats["socket"].value.removeAllListeners('action');
+            this.attacker.stats["socket"].value.emit("turnEnded", "");
+
             this.attacker = (this.attacker === this.player1) ? this.player2 : this.player1;
             this.defender = (this.defender === this.player1) ? this.player2 : this.player1;
             this.turn++;
-            //this.moves++;
+            this.moves++;
+            console.log(`turn : ${this.turn}`);
             this.takeTurn();
         });
 
@@ -36,18 +40,19 @@ class Match {
                 this.takeAction();
             }
             else {
-                this.gameController.emit('advanceTurn');
-                console.log("Advancing turn...");
+                this.attacker.emitAvailableActions();
             }
         });
 
-        this.emitAllStats();
         this.takeTurn();
     }
 
     takeTurn() {
         this.attacker.stats["moves"].value = this.moves;
-        this.attacker.stats["socket"].value.emit('turnStarted');
+        this.attacker.stats["socket"].value.emit('turnStarted', "");
+        this.attacker.stats["socket"].value.once('turnEnded', () => {
+            this.gameController.emit('advanceTurn');
+        });
         this.emitAllStats();
         this.takeAction();
     }
@@ -55,11 +60,8 @@ class Match {
     takeAction() {
         this.attacker.emitAvailableActions();
         this.attacker.stats["socket"].value.once('action', (e) => {
-
             this.attacker.actions[e].invoke(this.attacker, this.defender);
             this.attacker.stats["moves"].value -= this.attacker.actions[e].moveCost;
-            console.log(e);
-
             this.emitAllStats();
             this.gameController.emit('actionTaken');
         });

@@ -8,11 +8,13 @@ public class Client : MonoBehaviour
 
     public SocketIoClient client = new SocketIoClient();
 
+    public static bool isTurn = false;
 
     public GameObject networkContainer;
 
     private void Awake()
     {
+
     }
 
     // Start is called before the first frame update
@@ -20,40 +22,34 @@ public class Client : MonoBehaviour
     {
         client.Connected += Client_Connected;
         client.Disconnected += Client_Disconnected;
-        client.On("message", (e) =>
-        {
-            Debug.Log(e as string);
-        });
         client.On("actions", (e) =>
         {
-            Debug.Log(e);
             List<Action> actions = JsonConvert.DeserializeObject<List<Action>>(e);
             Hero.actions = actions;
             ActionButtons.ActionButtonsManager.actionsChanged = true;
         });
         client.On("yourStats", (e) =>
         {
-            Debug.Log(e);
             List<Stat> stats = JsonConvert.DeserializeObject<List<Stat>>(e);
             Hero.stats = stats;
-            Hero.stats.ForEach(stat =>
-            {
-                Debug.Log("YOU: "+stat.name + ": " + stat.value);
-            });
             UI.UIManager.statsChanged = true;
         });
         client.On("opponentStats", (e) =>
         {
-            Debug.Log(e);
             List<Stat> stats = JsonConvert.DeserializeObject<List<Stat>>(e);
             Hero.opponentStats = stats;
-            Hero.opponentStats.ForEach(stat =>
-            {
-                Debug.Log("OPPONENT: " + stat.name + ": " + stat.value);
-            });
             UI.UIManager.statsChanged = true;
         });
-
+        client.On("turnStarted", (e) =>
+        {
+            Debug.Log("Your turn!");
+            isTurn = true;
+        });
+        client.On("turnEnded", (e) =>
+        {
+            Debug.Log("Your turn ended.");
+            isTurn = false;
+        });
         connect();
     }
 
