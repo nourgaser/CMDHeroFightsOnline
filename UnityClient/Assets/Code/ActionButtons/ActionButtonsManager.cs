@@ -48,7 +48,7 @@ namespace ActionButtons
             Hero.actions.ForEach(action =>
             {
                 actionButtons[i].transform.gameObject.SetActive(true);
-                actionButtons[i].transform.GetChild(0).gameObject.GetComponent<Text>().text = action.name;
+                actionButtons[i].transform.GetChild(0).gameObject.GetComponent<Text>().text = action.name + ": " + action.moveCost;
                 actionButtons[i].onClick.RemoveAllListeners();
                 actionButtons[i].onClick.AddListener(() =>
                 {

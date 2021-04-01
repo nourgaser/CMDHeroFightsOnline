@@ -1,7 +1,7 @@
 const Hero = require("./Hero");
 const EventEmitter = require('events');
 
-class Match {
+class Battle {
     attacker;
     defender;
     gameController = new EventEmitter();
@@ -12,22 +12,22 @@ class Match {
         this.player1 = player1;
         this.player2 = player2;
 
-        this.startMatch();
+        this.startBattle();
     }
 
-    /*match setup: initialization and adding gameController listeners, 
+    /*battle setup: initialization and adding gameController listeners, 
     then signaling for first turn to start the turn loop*/
-    startMatch() {
+    startBattle() {
         this.attacker = this.player1;
         this.defender = this.player2;
 
         // sockets.array.forEach(socket => {
-        //     //all match-long listeners for both sockets 
+        //     //all battle-long listeners for both sockets 
         // });
 
         this.gameController.on('advanceTurn', () => {
             this.attacker.stats["socket"].value.removeAllListeners('action');
-            this.attacker.stats["socket"].value.emit("turnEnded", "");
+            this.attacker.stats["socket"].value.emit('turnEnded', "");
 
             this.attacker = (this.attacker === this.player1) ? this.player2 : this.player1;
             this.defender = (this.defender === this.player1) ? this.player2 : this.player1;
@@ -40,7 +40,13 @@ class Match {
             this.takeTurn();
         });
 
-
+        this.gameController.on('endBattle', (winner, loser) => {
+            console.log("ending match");
+            winner.stats["socket"].value.emit('battleWon', "You win!");
+            loser.stats["socket"].value.emit('battleLost', "You lose :(");
+            this.attacker.stats["socket"].value.removeAllListeners('turnEnded');
+            this.gameController.emit('battleEnded', "");
+        });
         this.gameController.on('actionTaken', () => {
             if (this.attacker.stats["moves"].value > 0) {
                 this.takeAction();
@@ -69,10 +75,20 @@ class Match {
     takeAction() {
         this.attacker.emitAvailableActions();
         this.attacker.stats["socket"].value.once('action', (e) => {
-            this.attacker.actions[e].invoke(this.attacker, this.defender);
+            var actionRes = this.attacker.actions[e].invoke(this.attacker, this.defender);
             this.attacker.stats["moves"].value -= this.attacker.actions[e].moveCost;
-            this.emitAllStats();
-            this.gameController.emit('actionTaken');
+            this.attacker.stats["socket"].value.emit("actionTaken", actionRes.attackerRes);
+            this.defender.stats["socket"].value.emit("actionTaken", actionRes.defenderRes);
+
+            if (this.defender.stats["hp"].value <= 0) {
+                this.defender.stats["hp"].value = 0;
+                this.emitAllStats();
+                this.gameController.emit('endBattle', this.attacker, this.defender);
+            }
+            else {
+                this.emitAllStats();
+                this.gameController.emit('actionTaken');
+            }
         });
     }
 
@@ -85,7 +101,7 @@ class Match {
     }
 }
 
-module.exports = Match;
+module.exports = Battle;
 
 
 

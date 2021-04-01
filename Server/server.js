@@ -1,43 +1,108 @@
 const Hero = require("./Game/Hero");
-var Match = require("./Game/Match");
-var io = require('socket.io')(8080, {
+const Battle = require("./Game/Battle");
+const uniqueID = require('uniqid');
+const EventEmitter = require('events');
+const io = require('socket.io')(8080, {
   allowEIO3: true
 });
 
-var players = new Array();
+const log = console.log;
+
+const allPlayers = [];
+const playerQueue = [];
+const battles = [];
+
+const localEventEmitter = new EventEmitter();
+
+// var battles = new Array();
+// var latestBattleIndex = 0
 
 io.on('connection', socket => {
-  console.log("Client connected!");
+  log("Client connected!");
   socket.emit('message', "You connected successfully!");
-  players.push(new Hero("warrior", socket));
-  console.log("Clients connected: " + players.length);
-  
-  if (players.length == 2) {
-    players[1] = new Hero("mage", socket);
-    createGame(players[0], players[1]);
-  }
+  Object.defineProperty(socket, 'id', {
+    value: uniqueID(),
+    writable: false
+  });
+  playerEnterMainLobby(socket);
 
-  socket.on('disconnect', () => {
-    console.log("Client disconnected!");
-    console.log("Clients connected: " + players.length);
-    players.forEach(player => {
-      if (player.stats["socket"].value === socket) {
-        players.pop(player);
-      }
-    })
-
+  socket.on('backToMainLobby', () => {
+    playerEnterMainLobby(socket);
+    socket.emit('backToMainLobby',"");
   });
 
+  socket.on('queuedIn', () => {
+    playerQueue[socket.id] = allPlayers[socket.id];
+    delete allPlayers[socket.id];
+    //DEBUG
+    logCounts();
+    localEventEmitter.emit('queueAppended', "");
+  });
+
+  socket.on('queuedOut', () => {
+    allPlayers[socket.id] = playerQueue[socket.id];
+    delete playerQueue[socket.id];
+  });
+
+  socket.on('disconnect', () => {
+    log("Client disconnected!");
+    //DEBUG
+    logCounts();
+  });
 });
 
+localEventEmitter.on('battleStarted', battle => {
+  battle.gameController.once('battleEnded', () => {
+    battle.gameController.removeAllListeners();
+    delete battles[battle.id];
+  });
+});
 
-var createGame = (p1, p2) => {
-  var match = new Match(p1, p2);
-  console.log("Match created.");
+localEventEmitter.on('queueAppended', () => {
+  log("appendning the queue!!\n");
+  if (Object.keys(playerQueue).length >= 2) {
+    log("attempting to start battle");
+    let ids = [];
+    let i = 0;
+    for (const [key, value] of Object.entries(playerQueue)) {
+      if (i == 2) break;
+      ids[i] = key;
+      i++;
+    }
+    playerQueue[ids[1]] = new Hero("mage", playerQueue[ids[1]].stats["socket"].value);
+    createBattle(playerQueue[ids[0]], playerQueue[ids[1]]);
+    delete playerQueue[ids[0]];
+    delete playerQueue[ids[1]];
+
+    //DEBUG
+    logCounts();
+  }
+});
+
+var createBattle = (p1, p2) => {
+  p1.stats["socket"].value.emit("startBattle", "");
+  p2.stats["socket"].value.emit("startBattle", "");
+
+  var b = new Battle(p1, p2);
+  Object.defineProperty(b, 'id', {
+    value: uniqueID(),
+    writable: false
+  });
+  battles[b.id] = b;
+
+  localEventEmitter.emit('battleStarted', b);
 }
 
-// setInterval(() => {
-//   console.log("Number of clients: " + players.length);
-// }, 10000);
+var playerEnterMainLobby = socket => {
+  allPlayers[socket.id] = new Hero("warrior", socket);
+  //DEBUG
+  logCounts();
+}
 
-console.log("Now listening on 8080...");
+var logCounts = () => {
+  log("Number of players in main lobby: " + Object.keys(allPlayers).length + "      key: " + Object.keys(allPlayers));
+  log("Number of players in queue: " + Object.keys(playerQueue).length + "           key: " + Object.keys(playerQueue));
+  log("Number of running battles: " + Object.keys(battles).length + "            key: " + Object.keys(battles));
+  log();
+}
+log("Now listening on 8080...");

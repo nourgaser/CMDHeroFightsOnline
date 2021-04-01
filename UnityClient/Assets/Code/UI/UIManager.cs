@@ -1,18 +1,22 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 namespace UI
 {
     public class UIManager : MonoBehaviour
     {
         public static bool statsChanged = true;
-
+        public static bool textToDisplayChanged = true;
+        public static string textToDisplay;
+        private GameObject textToDisplayObj;
         private GameObject[] yourStatsTextArr;
         private GameObject[] opponentStatsTextArr;
         private Client networking;
 
         private void Awake()
         {
+            textToDisplayObj = GameObject.Find("anyText");
             yourStatsTextArr = GameObject.FindGameObjectsWithTag("UIStatYours");
             opponentStatsTextArr = GameObject.FindGameObjectsWithTag("UIStatOpponent");
             networking = GameObject.Find("[  Code - Networking ]").GetComponent<Client>();
@@ -44,6 +48,17 @@ namespace UI
                 }
             });
         }
+        public void updateDisplayText()
+        {
+            textToDisplayObj.GetComponent<Text>().text = textToDisplay;
+            textToDisplayObj.SetActive(true);
+            StartCoroutine(turnOffText());
+        }
+        IEnumerator turnOffText()
+        {
+            yield return new WaitForSeconds(3);
+            textToDisplayObj.SetActive(false);
+        }
 
         // Update is called once per frame
         void Update()
@@ -52,6 +67,11 @@ namespace UI
             {
                 updateUIStats();
                 statsChanged = false;
+            }
+            if (textToDisplayChanged)
+            {
+                updateDisplayText();
+                textToDisplayChanged = false;
             }
         }
     }

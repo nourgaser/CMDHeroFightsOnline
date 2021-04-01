@@ -15,8 +15,13 @@ class Hero {
         }
         this.stats["moves"] = new Stat("moves", 3);
         this.stats["socket"] = new Stat("socket", socket);
-        this.actions["hunkerDown"] = new Action("hunkerDown", 3, false, (attacker, defender) => {
-            attacker.stats["dodgeChance"].value += 0.3;
+        this.stats["critDamage"] = new Stat("critDamage", 1.5);
+        this.actions["hunkerDown"] = new Action("hunkerDown", 3, (attacker, defender) => {
+            attacker.stats["dodgeChance"].value += 0.25;
+            return {
+                attackerRes: "Hunkered down!",
+                defenderRes: ""
+            }
         }, (attacker) => {
             return true;
         });
