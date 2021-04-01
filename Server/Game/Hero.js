@@ -1,30 +1,19 @@
 const AllClasses = require('./Classes/All');
 const Stat = require('./Stat');
 const Action = require('./Action');
+const Modifier = require('./Modifier');
 
 class Hero {
     stats = [];
     actions = [];
     classID;
     constructor(classID, socket) {
-        for (var statID in AllClasses.classes[classID].stats) {
-            this.stats[statID] = AllClasses.classes[classID].stats[statID];
-        }
-        for (var actionID in AllClasses.classes[classID].actions) {
-            this.actions[actionID] = AllClasses.classes[classID].actions[actionID];
-        }
-        this.stats["moves"] = new Stat("moves", 3);
         this.stats["socket"] = new Stat("socket", socket);
-        this.stats["critDamage"] = new Stat("critDamage", 1.5);
-        this.actions["hunkerDown"] = new Action("hunkerDown", 3, (attacker, defender) => {
-            attacker.stats["dodgeChance"].value += 0.25;
-            return {
-                attackerRes: "Hunkered down!",
-                defenderRes: ""
-            }
-        }, (attacker) => {
-            return true;
-        });
+
+        AllClasses.classes[classID].initStats(this.stats);
+        AllClasses.classes[classID].initActions(this.actions);
+        this.initGeneralStatsAndActions();
+
         this.classID = classID;
     }
 
@@ -76,5 +65,33 @@ class Hero {
         this.stats["socket"].value.emit("actions", clientActions);
         console.log("Actions sent to attacker!");
     }
+
+    //add class independant actions and stats (defaults)
+    initGeneralStatsAndActions() {
+        this.stats["moves"] = new Stat("moves", 3);
+        this.stats["critDamage"] = new Stat("critDamage", 1.5);
+        this.actions["hunkerDown"] = new Action("hunkerDown", 3, (attacker, defender, battle) => {
+            attacker.stats["dodgeChance"].modifiers["dodge"] = new Modifier("Hunkered-Down", "dodgeChance", [{ key: "chance", value: 0.25 }], battle.turnCounter, 2, "Dodge Chance increased until next turn");
+            attacker.stats["dodgeChance"].value += 0.25;
+            var dodge = () => {
+                let startTurn = attacker.stats["dodgeChance"].modifiers["dodge"].startTurn;
+                let duration = attacker.stats["dodgeChance"].modifiers["dodge"].duration;
+                if (battle.turnCounter == startTurn + duration) {
+                    attacker.stats["dodgeChance"].value -= 0.25;
+                    battle.gameController.removeListener('advanceModifiers', dodge);
+
+                }
+
+            }
+            battle.gameController.on('advanceModifiers', dodge);
+            return {
+                attackerRes: "Hunkered down!",
+                defenderRes: ""
+            }
+        }, (attacker) => {
+            return true;
+        });
+    }
+
 };
 module.exports = Hero;

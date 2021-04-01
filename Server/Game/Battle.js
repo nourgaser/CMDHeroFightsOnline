@@ -37,6 +37,8 @@ class Battle {
                 if (this.turnCounter < 16) this.moves++;
             }
             console.log(`turn : ${this.turn}`);
+
+            this.gameController.emit('advanceModifiers', "");
             this.takeTurn();
         });
 
@@ -75,7 +77,7 @@ class Battle {
     takeAction() {
         this.attacker.emitAvailableActions();
         this.attacker.stats["socket"].value.once('action', (e) => {
-            var actionRes = this.attacker.actions[e].invoke(this.attacker, this.defender);
+            var actionRes = this.attacker.actions[e].invoke(this.attacker, this.defender, this);
             this.attacker.stats["moves"].value -= this.attacker.actions[e].moveCost;
             this.attacker.stats["socket"].value.emit("actionTaken", actionRes.attackerRes);
             this.defender.stats["socket"].value.emit("actionTaken", actionRes.defenderRes);

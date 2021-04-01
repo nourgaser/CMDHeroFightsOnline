@@ -1,7 +1,7 @@
 class Stat {
     name;
     value;
-    modifiers;
+    modifiers = [];
     constructor(name, value) {
         this.name = name;
         this.value = value;

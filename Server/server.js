@@ -14,9 +14,6 @@ const battles = [];
 
 const localEventEmitter = new EventEmitter();
 
-// var battles = new Array();
-// var latestBattleIndex = 0
-
 io.on('connection', socket => {
   log("Client connected!");
   socket.emit('message', "You connected successfully!");
