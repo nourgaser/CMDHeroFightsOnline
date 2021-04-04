@@ -4,13 +4,13 @@ const Modifier = require("../Modifier");
 
 var initStats = statsArr => {
     statsArr["class"] = new Stat("class", "Mage");
-    statsArr["hp"] = new Stat("hp", 200);
-    statsArr["armor"] = new Stat("armor", 10);
-    statsArr["magicResist"] = new Stat("magicResist", 20);
+    statsArr["hp"] = new Stat("hp", 240);
+    statsArr["armor"] = new Stat("armor", 3);
+    statsArr["magicResist"] = new Stat("magicResist", 10);
     statsArr["physicalDamage"] = new Stat("physicalDamage", 0);
     statsArr["magicDamage"] = new Stat("magicDamage", 65);
-    statsArr["dodgeChance"] = new Stat("dodgeChance", 0.25);
-    statsArr["critChance"] = new Stat("critChance", 0.20);
+    statsArr["dodgeChance"] = new Stat("dodgeChance", 0.1);
+    statsArr["critChance"] = new Stat("critChance", 0.1);
 }
 
 var initActions = actionsArr => {
@@ -26,13 +26,13 @@ var initActions = actionsArr => {
             attackerRes: "mage used shootEnergy: " + damageDealt,
             defenderRes: "You just got hit for " + damageDealt + " damage!"
         }
-    }, (attacker) => {
+    }, (attacker, defender) => {
         return true;
     });
     actionsArr["shootFireball"] = new Action("shootFireball", 5, (attacker, defender, battle) => {
         let values = [];
         values["damage"] = 30;
-        defender.stats["hp"].modifiers["burn"] = new Modifier("Set-Aflame", "trueDamageDOT", values, battle.turnCounter, 3, "Burning for 30 damage/turn.");
+        defender.stats["hp"].modifiers["burn"] = new Modifier("Set-Aflame", "trueDOT", values, battle.turnCounter, 3, "Burning for 30 damage/turn.");
     
         var burn = () => {
             let startTurn = defender.stats["hp"].modifiers["burn"].startTurn;
@@ -47,6 +47,7 @@ var initActions = actionsArr => {
 
             if (battle.turnCounter == startTurn + duration) {
                 battle.gameController.removeListener('advanceModifiers', burn);
+                delete defender.stats["hp"].modifiers["burn"];
                 //emit to clients that dot ended.
             }
         };
@@ -59,7 +60,7 @@ var initActions = actionsArr => {
             attackerRes: "Used shootFireball: " + constants["shootFireballValue"] + " and applied true damage burn for 2 turns",
             defenderRes: "You just got hit for " + constants["shootFireballValue"] + " damage! You're burning for 2 turns."
         }
-    }, (attacker) => {
+    }, (attacker, defender) => {
         return true;
     });
     actionsArr["powerUp"] = new Action("powerUp", 6, (attacker, defender, battle) => {
@@ -69,7 +70,7 @@ var initActions = actionsArr => {
             attackerRes: "Increased stats!!!",
             defenderRes: ""
         }
-    }, (attacker) => {
+    }, (attacker, defender) => {
         return true;
     });
 }

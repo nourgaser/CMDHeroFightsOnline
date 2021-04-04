@@ -4,12 +4,12 @@ const Action = require('../Action');
 var initStats = (statsArr) => {
     statsArr["class"] = new Stat("class", "Warrior");
     statsArr["hp"] = new Stat("hp", 310);
-    statsArr["armor"] = new Stat("armor", 30);
-    statsArr["magicResist"] = new Stat("magicResist", 35);
+    statsArr["armor"] = new Stat("armor", 20);
+    statsArr["magicResist"] = new Stat("magicResist", 15);
     statsArr["physicalDamage"] = new Stat("physicalDamage", 35);
     statsArr["magicDamage"] = new Stat("magicDamage", 0);
-    statsArr["dodgeChance"] = new Stat("dodgeChance", 0.25);
-    statsArr["critChance"] = new Stat("critChance", 0.10);
+    statsArr["dodgeChance"] = new Stat("dodgeChance", 0.2);
+    statsArr["critChance"] = new Stat("critChance", 0.1);
 }
 
 const initActions = actionsArr => {
@@ -25,7 +25,7 @@ const initActions = actionsArr => {
             attackerRes: "Sword swung for " + damageDealt + " damage!",
             defenderRes: "You just got hit for " + damageDealt + " damage!"
         }
-    }, (attacker) => {
+    }, (attacker, defender) => {
         return true;
     });
     actionsArr["usePotion"] = new Action("usePotion", 3, (attacker, defender, battle) => {
@@ -34,7 +34,7 @@ const initActions = actionsArr => {
             attackerRes: "Healed for " + 50,
             defenderRes: "Enemy healed for " + 50
         }
-    }, (attacker) => {
+    }, (attacker, defender) => {
         return true;
     });
     actionsArr["ironSkin"] = new Action("ironSkin", 4, (attacker, defender, battle) => {
@@ -43,7 +43,7 @@ const initActions = actionsArr => {
             attackerRes: "Armor increased by 20",
             defenderRes: ""
         }
-    }, (attacker) => {
+    }, (attacker, defender) => {
         return true;
     });
 }

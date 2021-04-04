@@ -91,7 +91,7 @@ var createBattle = (p1, p2) => {
 }
 
 var playerEnterMainLobby = socket => {
-  allPlayers[socket.id] = new Hero("warrior", socket);
+  allPlayers[socket.id] = new Hero("rogue", socket);
   //DEBUG
   logCounts();
 }

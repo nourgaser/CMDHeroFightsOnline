@@ -39,7 +39,10 @@ class Battle {
             console.log(`turn : ${this.turn}`);
 
             this.gameController.emit('advanceModifiers', "");
-            this.takeTurn();
+            if (this.checkMatchEnded());
+            else {
+                this.takeTurn();
+            }
         });
 
         this.gameController.on('endBattle', (winner, loser) => {
@@ -54,11 +57,11 @@ class Battle {
                 this.takeAction();
             }
             else {
-                this.attacker.emitAvailableActions();
+                this.attacker.emitAvailableActions(this.defender);
             }
         });
 
-        this.defender.emitAvailableActions();
+        this.defender.emitAvailableActions(this.attacker);
         this.takeTurn();
     }
 
@@ -75,7 +78,7 @@ class Battle {
 
     //emit the available actions to the attacker client and listen for their action and invoke it
     takeAction() {
-        this.attacker.emitAvailableActions();
+        this.attacker.emitAvailableActions(this.defender);
         this.attacker.stats["socket"].value.once('action', (e) => {
             var actionRes = this.attacker.actions[e].invoke(this.attacker, this.defender, this);
             this.attacker.stats["moves"].value -= this.attacker.actions[e].moveCost;
@@ -87,6 +90,7 @@ class Battle {
                 this.emitAllStats();
                 this.gameController.emit('endBattle', this.attacker, this.defender);
             }
+            if (this.checkMatchEnded());
             else {
                 this.emitAllStats();
                 this.gameController.emit('actionTaken');
@@ -100,6 +104,21 @@ class Battle {
         this.defender.emitOpponentStats(this.attacker);
         this.defender.emitStats();
         this.attacker.emitOpponentStats(this.defender);
+    }
+    checkMatchEnded() {
+        let ended = false;
+        if (this.defender.stats["hp"].value <= 0) {
+            this.defender.stats["hp"].value = 0;
+            this.gameController.emit('endBattle', this.attacker, this.defender);
+            ended = true;
+        }
+        else if (this.attacker.stats["hp"].value <= 0) {
+            this.attacker.stats["hp"].value = 0;
+            this.gameController.emit('endBattle', this.defender, this.attacker);
+            ended = true
+        }
+        this.emitAllStats();
+        return ended;
     }
 }
 

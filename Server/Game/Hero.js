@@ -45,14 +45,14 @@ class Hero {
         opponentHero.stats["socket"].value.emit("opponentStats", clientStats);
     }
 
-    emitAvailableActions() {
+    emitAvailableActions(opponentHero) {
         //TODO: test this
         // var clientActions = JSON.stringify(this.actions, ['name', 'moveCost', 'isRepeatable']);
         // this.stats["socket"].value.emit("actions", clientActions);
 
         var clientActions = new Array();
         for (var actionID in this.actions) {
-            if (this.stats["moves"].value >= this.actions[actionID].moveCost && this.actions[actionID].conditionMet(this)) {
+            if (this.stats["moves"].value >= this.actions[actionID].moveCost && this.actions[actionID].conditionMet(this, opponentHero)) {
                 var clientAction = {
                     name: this.actions[actionID].name,
                     moveCost: this.actions[actionID].moveCost,
@@ -79,7 +79,7 @@ class Hero {
                 if (battle.turnCounter == startTurn + duration) {
                     attacker.stats["dodgeChance"].value -= 0.25;
                     battle.gameController.removeListener('advanceModifiers', dodge);
-
+                    delete attacker.stats["dodgeChance"].modifiers["dodge"];
                 }
 
             }
