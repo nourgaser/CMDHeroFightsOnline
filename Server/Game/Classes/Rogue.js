@@ -13,6 +13,10 @@ var initStats = (statsArr) => {
     statsArr["critChance"] = new Stat("critChance", 1);
 }
 
+var initModifiers = (hero, battle, turnToStart) => {
+
+}
+
 var initActions = (actionsArr) => {
     actionsArr["daggerStab"] = new Action("daggerStab", 3, (attacker, defender, battle) => {
         var dodge = (Action.applyChance(defender.stats["dodgeChance"].value)) ? 0 : 1;
@@ -45,11 +49,11 @@ var initActions = (actionsArr) => {
                         battle.emitAllStats();
                     }
                     if (battle.turnCounter == startTurn + duration) {
-                        battle.gameController.removeListener('advanceModifiers', poison);
+                        battle.gameController.removeListener('advanceTurnStartModifiers', poison);
                         delete defender.stats["hp"].modifiers["poison"];
                     }
                 }
-                battle.gameController.on('advanceModifiers', poison);
+                battle.gameController.on('advanceTurnStartModifiers', poison);
             }
             else {
                 defender.stats["hp"].modifiers["poison"].values["damage"] += 10;
@@ -96,7 +100,7 @@ const constants = [];
 //ABILITY CONSTANTS
 constants["daggerStabMax"] = 10;
 constants["daggerStabMin"] = 1;
-constants["daggerStabADScaling"] = 0.2;
+constants["daggerStabADScaling"] = 0.5;
 
 constants["excuteDamage"] = 100;
 
@@ -104,5 +108,6 @@ constants["excuteDamage"] = 100;
 module.exports = {
     initStats: initStats,
     initActions: initActions,
+    initModifiers: initModifiers,
     constants: constants
 };

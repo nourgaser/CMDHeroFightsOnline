@@ -12,6 +12,10 @@ var initStats = (statsArr) => {
     statsArr["critChance"] = new Stat("critChance", 0.1);
 }
 
+var initModifiers = (hero, battle, turnToStart) => {
+
+}
+
 const initActions = actionsArr => {
     actionsArr["swingSword"] = new Action("swingSword", 3, (attacker, defender, battle) => {
         var dodge = (Action.applyChance(defender.stats["dodgeChance"].value)) ? 0 : 1;
@@ -61,6 +65,7 @@ constants["usePotionValue"] = 20;
 module.exports = {
     initStats: initStats,
     initActions: initActions,
+    initModifiers: initModifiers,
     constants: constants
 };
 

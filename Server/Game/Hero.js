@@ -78,12 +78,12 @@ class Hero {
                 let duration = attacker.stats["dodgeChance"].modifiers["dodge"].duration;
                 if (battle.turnCounter == startTurn + duration) {
                     attacker.stats["dodgeChance"].value -= 0.25;
-                    battle.gameController.removeListener('advanceModifiers', dodge);
+                    battle.gameController.removeListener('advanceTurnStartModifiers', dodge);
                     delete attacker.stats["dodgeChance"].modifiers["dodge"];
                 }
 
             }
-            battle.gameController.on('advanceModifiers', dodge);
+            battle.gameController.on('advanceTurnStartModifiers', dodge);
             return {
                 attackerRes: "Hunkered down!",
                 defenderRes: ""

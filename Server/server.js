@@ -66,7 +66,7 @@ localEventEmitter.on('queueAppended', () => {
       ids[i] = key;
       i++;
     }
-    playerQueue[ids[1]] = new Hero("mage", playerQueue[ids[1]].stats["socket"].value);
+    playerQueue[ids[1]] = new Hero("rogue", playerQueue[ids[1]].stats["socket"].value);
     createBattle(playerQueue[ids[0]], playerQueue[ids[1]]);
     delete playerQueue[ids[0]];
     delete playerQueue[ids[1]];
@@ -91,7 +91,7 @@ var createBattle = (p1, p2) => {
 }
 
 var playerEnterMainLobby = socket => {
-  allPlayers[socket.id] = new Hero("rogue", socket);
+  allPlayers[socket.id] = new Hero("mage", socket);
   //DEBUG
   logCounts();
 }

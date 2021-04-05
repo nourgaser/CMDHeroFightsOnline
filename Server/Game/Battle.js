@@ -1,5 +1,5 @@
-const Hero = require("./Hero");
 const EventEmitter = require('events');
+const AllClasses = require('./Classes/All');
 
 class Battle {
     attacker;
@@ -21,13 +21,14 @@ class Battle {
         this.attacker = this.player1;
         this.defender = this.player2;
 
-        // sockets.array.forEach(socket => {
-        //     //all battle-long listeners for both sockets 
-        // });
+        AllClasses.classes[this.attacker.classID].initModifiers(this.attacker, this, this.turnCounter);
+        AllClasses.classes[this.defender.classID].initModifiers(this.defender, this, this.turnCounter + 1);
 
         this.gameController.on('advanceTurn', () => {
             this.attacker.stats["socket"].value.removeAllListeners('action');
             this.attacker.stats["socket"].value.emit('turnEnded', "");
+
+            this.gameController.emit('advanceTurnEndedModifiers', "");
 
             this.attacker = (this.attacker === this.player1) ? this.player2 : this.player1;
             this.defender = (this.defender === this.player1) ? this.player2 : this.player1;
@@ -38,7 +39,8 @@ class Battle {
             }
             console.log(`turn : ${this.turn}`);
 
-            this.gameController.emit('advanceModifiers', "");
+            this.gameController.emit('advanceTurnStartModifiers', "");
+
             if (this.checkMatchEnded());
             else {
                 this.takeTurn();
@@ -80,10 +82,15 @@ class Battle {
     takeAction() {
         this.attacker.emitAvailableActions(this.defender);
         this.attacker.stats["socket"].value.once('action', (e) => {
+
+            this.gameController.emit("advancePreActionModifiers", "");
+
             var actionRes = this.attacker.actions[e].invoke(this.attacker, this.defender, this);
             this.attacker.stats["moves"].value -= this.attacker.actions[e].moveCost;
             this.attacker.stats["socket"].value.emit("actionTaken", actionRes.attackerRes);
             this.defender.stats["socket"].value.emit("actionTaken", actionRes.defenderRes);
+
+            this.gameController.emit("advancePostActionModifiers", "");
 
             if (this.defender.stats["hp"].value <= 0) {
                 this.defender.stats["hp"].value = 0;
