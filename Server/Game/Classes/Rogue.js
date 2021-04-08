@@ -19,11 +19,15 @@ var initModifiers = (hero, battle, turnToStart) => {
 
 var initActions = (actionsArr) => {
     actionsArr["daggerStab"] = new Action("daggerStab", 3, (attacker, defender, battle) => {
-        var dodge = (Action.applyChance(defender.stats["dodgeChance"].value)) ? 0 : 1;
-        var crit = (Action.applyChance(attacker.stats["critChance"].value)) ? attacker.stats["critDamage"].value : 1;
+        let attackerLuck = attacker.stats["luck"].value;
+        let defenderLuck = defender.stats["luck"].value;
+
+
+        var dodge = (Action.applyChance(defender.stats["dodgeChance"].value - attackerLuck + defenderLuck)) ? 0 : 1;
+        var crit = (Action.applyChance(attacker.stats["critChance"].value + attackerLuck)) ? attacker.stats["critDamage"].value : 1;
 
         var damageDealt = Math.floor(dodge * ((((Math.floor(Math.random() * (constants["daggerStabMax"] - constants["daggerStabMin"] + 1)) + constants["daggerStabMin"])
-            + attacker.stats["physicalDamage"].value * constants["daggerStabADScaling"]) * crit) - defender.stats["armor"].value));
+            + attacker.stats["physicalDamage"].value * constants["daggerStabADScaling"]) * crit) - defender.stats["armor"].value) * (attackerLuck + 1));
 
         defender.stats["hp"].value -= damageDealt;
         if (crit === 1) {
@@ -100,7 +104,9 @@ const constants = [];
 //ABILITY CONSTANTS
 constants["daggerStabMax"] = 10;
 constants["daggerStabMin"] = 1;
-constants["daggerStabADScaling"] = 0.5;
+//constants["daggerStabADScaling"] = 0.5;
+constants["daggerStabADScaling"] = 0.1;
+
 
 constants["excuteDamage"] = 100;
 

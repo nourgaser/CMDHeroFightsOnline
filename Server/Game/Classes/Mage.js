@@ -38,11 +38,14 @@ var initActions = actionsArr => {
 
         attacker.stats["mana"].value -= constants["shootEnergyManaCost"];
 
-        var dodge = (Action.applyChance(defender.stats["dodgeChance"].value)) ? 0 : 1;
-        var crit = (Action.applyChance(attacker.stats["critChance"].value)) ? attacker.stats["critDamage"].value : 1;
+        let attackerLuck = attacker.stats["luck"].value;
+        let defenderLuck = defender.stats["luck"].value;
+        
+        var dodge = (Action.applyChance(defender.stats["dodgeChance"].value - attackerLuck + defenderLuck)) ? 0 : 1;
+        var crit = (Action.applyChance(attacker.stats["critChance"].value + attackerLuck)) ? attacker.stats["critDamage"].value : 1;
 
         var damageDealt = Math.floor(dodge * ((((Math.floor(Math.random() * (constants["shootEnergyMax"] - constants["shootEnergyMin"] + 1)) + constants["shootEnergyMin"])
-            + attacker.stats["magicDamage"].value * constants["shootEnergyAPScaling"]) * crit) - defender.stats["magicResist"].value));
+            + attacker.stats["magicDamage"].value * constants["shootEnergyAPScaling"]) * crit) - defender.stats["magicResist"].value) * (attackerLuck + 1));
 
         defender.stats["hp"].value -= damageDealt;
         return {

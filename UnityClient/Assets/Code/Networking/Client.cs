@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class Client : MonoBehaviour
 {
-    private static readonly System.Uri url = new System.Uri("http://192.168.1.103:8080/socket.io/");
+    private static readonly System.Uri url = new System.Uri("http://192.168.1.105:8080/socket.io/");
 
     public SocketIoClient client = new SocketIoClient();
 

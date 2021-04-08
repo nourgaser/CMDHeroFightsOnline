@@ -70,6 +70,37 @@ class Hero {
     initGeneralStatsAndActions() {
         this.stats["moves"] = new Stat("moves", 3);
         this.stats["critDamage"] = new Stat("critDamage", 1.5);
+        this.stats["luck"] = new Stat("luck", 0);
+
+        this.actions["luckUp"] = new Action("luckUp", 2, (attacker, defender, battle) => {
+
+            attacker.stats["luck"].value += 0.1;
+
+            let res = {
+                attackerRes: "Increased luck by 10%!",
+                defenderRes: "Opponent increased luck by 10%!"
+            }
+
+            return res;
+
+        }, (attacker, defender) => {
+            return true;
+        });
+
+        this.actions["luckDown"] = new Action("luckDown", 2, (attacker, defender, battle) => {
+
+            defender.stats["luck"].value -= 0.05;
+
+            let res = {
+                attackerRes: "Decreased your opponent's luck by 5%!",
+                defenderRes: "Your luck got decreased by 5%!"
+            }
+
+            return res;
+        }, (attacker, defender) => {
+            return true;
+        });
+
         this.actions["hunkerDown"] = new Action("hunkerDown", 3, (attacker, defender, battle) => {
             attacker.stats["dodgeChance"].modifiers["dodge"] = new Modifier("Hunkered-Down", "dodgeChance", [{ key: "chance", value: 0.25 }], battle.turnCounter, 2, "Dodge Chance increased until next turn");
             attacker.stats["dodgeChance"].value += 0.25;
@@ -88,7 +119,7 @@ class Hero {
                 attackerRes: "Hunkered down!",
                 defenderRes: ""
             }
-        }, (attacker) => {
+        }, (attacker, defender) => {
             return true;
         });
     }
