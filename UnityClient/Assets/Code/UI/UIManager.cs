@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System;
 
 namespace UI
 {
@@ -33,18 +34,53 @@ namespace UI
             Debug.Log("UI stats updated!");
             int i = 0;
             Hero.stats.ForEach(Stat => {
+                if (Stat.name == "luck")
+                {
+                    yourStatsTextArr[i].GetComponent<Text>().text = "Luck: ";
+                    if (Convert.ToSingle(Stat.value) > 0f)
+                    {
+                        yourStatsTextArr[i].GetComponent<Text>().text += "+" + Convert.ToSingle(Stat.value) * 100 + "%";
+                    }
+                    else if (Convert.ToSingle(Stat.value) < 0f)
+                    {
+                        yourStatsTextArr[i].GetComponent<Text>().text += Convert.ToSingle(Stat.value) * 100 + "%";
+                    }
+                    else
+                    {
+                        yourStatsTextArr[i].GetComponent<Text>().text += "+/- 0%";
+                    }
+                }
+                else
+                {
                 yourStatsTextArr[i].GetComponent<Text>().text = Stat.name + ": " + Stat.value;
+                }
                 i++;
             });
             Hero.opponentStats.ForEach(Stat => {
                 if (Stat.name == "hp")
                 {
-                    opponentStatsTextArr[0].GetComponent<Text>().text = "HP : " + Stat.value;
+                    opponentStatsTextArr[0].GetComponent<Text>().text = "HP: " + Stat.value;
 
                 }
                 if (Stat.name == "class")
                 {
-                    opponentStatsTextArr[1].GetComponent<Text>().text = "Class : " + Stat.value;
+                    opponentStatsTextArr[1].GetComponent<Text>().text = "Class: " + Stat.value;
+                }
+                if (Stat.name == "luck")
+                {
+                    opponentStatsTextArr[2].GetComponent<Text>().text = "Luck: ";
+                    if (Convert.ToSingle(Stat.value) > 0f)
+                    {
+                        opponentStatsTextArr[2].GetComponent<Text>().text += "+" + Convert.ToSingle(Stat.value) * 100 + "%";
+                    }
+                    else if (Convert.ToSingle(Stat.value) < 0f)
+                    {
+                        opponentStatsTextArr[2].GetComponent<Text>().text += Convert.ToSingle(Stat.value) * 100 + "%";
+                    }
+                    else
+                    {
+                        opponentStatsTextArr[2].GetComponent<Text>().text += "+/- 0";
+                    }
                 }
             });
         }

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class Client : MonoBehaviour
 {
-    private static readonly System.Uri url = new System.Uri("http://192.168.1.103:8080/socket.io/");
+    private static readonly System.Uri url = new System.Uri("http://192.168.1.105:8080/socket.io/");
 
     public SocketIoClient client = new SocketIoClient();
 
@@ -24,6 +24,10 @@ public class Client : MonoBehaviour
     {
         client.Connected += Client_Connected;
         client.Disconnected += Client_Disconnected;
+        client.On("checkConnection", e =>
+        {
+            client.Emit("checkConnection", "");
+        });
         client.On("startBattle", (e) =>
         {
             addBattleListerners();
@@ -124,7 +128,7 @@ public class Client : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        client.Emit("disconnect", "Disconnected.");
+        //client.Emit("disconnect", "Disconnected.");
         client.DisconnectAsync();
         client.Dispose();
     }

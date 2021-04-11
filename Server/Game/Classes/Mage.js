@@ -37,12 +37,8 @@ var initActions = actionsArr => {
     actionsArr["shootEnergy"] = new Action("shootEnergy", 3, (attacker, defender, battle) => {
 
         attacker.stats["mana"].value -= constants["shootEnergyManaCost"];
-
-        var dodge = (Action.applyChance(defender.stats["dodgeChance"].value)) ? 0 : 1;
-        var crit = (Action.applyChance(attacker.stats["critChance"].value)) ? attacker.stats["critDamage"].value : 1;
-
-        var damageDealt = Math.floor(dodge * ((((Math.floor(Math.random() * (constants["shootEnergyMax"] - constants["shootEnergyMin"] + 1)) + constants["shootEnergyMin"])
-            + attacker.stats["magicDamage"].value * constants["shootEnergyAPScaling"]) * crit) - defender.stats["magicResist"].value));
+        let damageResult = Action.standardDamageCalculation(attacker, defender, constants["shootEnergyMax"], constants["shootEnergyMin"], "magicResist", 0, constants["shootEnergyAPScaling"]);
+        let damageDealt = damageResult.damageDealt;
 
         defender.stats["hp"].value -= damageDealt;
         return {
@@ -117,6 +113,7 @@ var initActions = actionsArr => {
         defender.stats["hp"].value -= damageDealt;
         defender.stats["magicResist"].value = 0;
 
+        delete actionsArr["unleashEnergy"];
         return {
             attackerRes: "Unleashed all their energy and dealt " + damageDealt + " damage!!! Also destroyed all magic resistance.",
             defenderRes: "Unleashed all their energy and dealt " + damageDealt + " damage!!! Also destroyed all magic resistance."
