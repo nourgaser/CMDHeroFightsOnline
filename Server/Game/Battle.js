@@ -3,6 +3,8 @@ const EventEmitter = require('events');
 const AllClasses = require('./Classes/All');
 const Hero = require('./Hero');
 
+const TURN_TIME = 60;
+
 class Battle {
     attacker;
     defender;
@@ -10,7 +12,11 @@ class Battle {
     turn = 1;
     moves = 3;
     turnCounter = 0;
+
+    turnTimerSeconds = TURN_TIME;
+    turnTimerLastChecked = 0;
     battleEnded = false;
+
 
     disconnectedPlayer;
 
@@ -34,8 +40,11 @@ class Battle {
         AllClasses.classes[this.defender.classID].initModifiers(this.defender, this, this.turnCounter + 1);
 
         this.gameController.on('advanceTurn', () => {
-            this.attacker.socket.removeAllListeners('action');
-            this.attacker.socket.emit('turnEnded', "");
+            console.log("GameController: Adcancing turn...");
+            if (this.attacker.socket != null) {
+                this.attacker.socket.removeAllListeners('action');
+                this.attacker.socket.emit('turnEnded', "");
+            }
 
             this.gameController.emit('advanceTurnEndedModifiers', "");
 
@@ -43,7 +52,8 @@ class Battle {
             this.defender = (this.defender === this.player1) ? this.player2 : this.player1;
             this.attacker.isTurn = true;
             this.defender.isTurn = false;
-            
+
+            this.turnTimerSeconds = TURN_TIME;
             this.turnCounter++;
             if (this.turnCounter % 2 == 0) {
                 this.turn++;
@@ -60,8 +70,13 @@ class Battle {
 
         this.gameController.on('endBattle', (winner, loser) => {
             this.battleEnded = true;
-            winner.socket.emit('battleWon', "You win!");
-            loser.socket.emit('battleLost', "You lose :(");
+            if (winner.socket != null) {
+                winner.socket.emit('battleWon', "You win!");
+            }
+            if (loser.socket != null) {
+                loser.socket.emit('battleLost', "You lose :(");
+            }
+            clearInterval(this.turnTimer);
             this.attacker.socket.removeAllListeners('turnEnded');
             this.gameController.emit('battleEnded', "");
         });
@@ -105,11 +120,14 @@ class Battle {
         if (this.attacker.socket != null) {
             this.attacker.socket.emit('turnStarted', "");
             this.attacker.socket.once('turnEnded', () => {
+                clearInterval(this.turnTimer);
                 this.gameController.emit('advanceTurn');
             });
             this.emitAllStats();
             this.takeAction();
         }
+
+        this.startTurnTimer();
     }
 
     //emit the available actions to the attacker client and listen for their action and invoke it
@@ -124,7 +142,7 @@ class Battle {
 
             this.attacker.stats["moves"].value -= this.attacker.actions[e].moveCost;
             var actionRes = this.attacker.actions[e].invoke(this.attacker, this.defender, this);
-            this.attacker.socket.emit("actionTaken", actionRes.attackerRes);
+            if (this.attacker.socket != null) this.attacker.socket.emit("actionTaken", actionRes.attackerRes);
             if (this.defender.socket != null) this.defender.socket.emit("actionTaken", actionRes.defenderRes);
 
             this.gameController.emit("advancePostActionModifiers", "");
@@ -170,11 +188,33 @@ class Battle {
         return ended;
     }
 
-    test() {
-        setInterval(() => {
-            console.log("Player 1 socket: " + this.player1.socket);
-        }, 5000);
+    turnTimer;
+
+    startTurnTimer = () => {
+
+        this.turnTimer = setInterval(() => {
+            if (this.turnTimerSeconds > 0 && this.turnTimerSeconds < 1) {
+                if (this.attacker.socket != null) {
+                    this.attacker.socket.removeAllListeners('turnEnded');
+                    //emit that they missed their turn
+                }
+                console.log("Player missed their turn...");
+            }
+            else if (this.turnTimerSeconds <= 0) {
+                clearInterval(this.turnTimer);
+                this.gameController.emit('advanceTurn', "");
+            }
+            if (this.turnTimerSeconds != TURN_TIME) {
+                this.turnTimerSeconds -= (Math.round(((Date.now() - this.turnTimerLastChecked) / 1000) * 1000) / 1000).toFixed(3);
+            }
+            else {
+                this.turnTimerSeconds--;
+            }
+            this.turnTimerLastChecked = Date.now();
+
+        }, 1000);
     }
+
 }
 
 module.exports = Battle;

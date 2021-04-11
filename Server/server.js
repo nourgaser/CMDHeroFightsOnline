@@ -88,19 +88,16 @@ io.on('connection', socket => {
       if (battle.player1.socket != null) {
         if (socket.conn.remoteAddress == battle.player1.socket.conn.remoteAddress) {
           disconnectedClients[socket.conn.remoteAddress].playerNumber = 1;
-          setTimeout(battle.gameController.emit('endBattle', (battle.player2, battle.player1)), 5000);
-          // battle.player1.socket = null;
+          battle.player1.socket = null;
         }
         else {
           disconnectedClients[socket.conn.remoteAddress].playerNumber = 2;
-          setTimeout(battle.gameController.emit('endBattle', (battle.player1, battle.player1)), 6000);
-          // battle.player2.socket = null;
+          battle.player2.socket = null;
         }
       }
       else {
         disconnectedClients[socket.conn.remoteAddress].playerNumber = 2;
-        setTimeout(battle.gameController.emit('endBattle', (battle.player1, battle.player1)), 6000);
-        // battle.player2.socket = null;
+        battle.player2.socket = null;
       }
     }
 
