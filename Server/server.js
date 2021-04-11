@@ -74,13 +74,15 @@ io.on("connection", (socket) => {
     logCounts();
   });
 
-  createCheckConnectionInterval(socket);
+  setTimeout(() => {
+    createCheckConnectionInterval(socket);
+  }, 15000);
 });
 
 localEventEmitter.on("battleStarted", (battle) => {
   battle.gameController.once("battleEnded", () => {
-    battle.player1.socket.battleID = null;
-    battle.player2.socket.battleID = null;
+    if (battle.player1.socket != null) battle.player1.socket.battleID = null;
+    if (battle.player2.socket != null) battle.player2.socket.battleID = null;
     battle.gameController.removeAllListeners();
     delete battles[battle.id];
     log("Battle ended!");
@@ -158,7 +160,7 @@ var onDisconnect = (socket) => {
   if (socket.battleID != null && !battles[socket.battleID].battleEnded) {
     log(
       "Client disconnected while in non-determined battle... " +
-        socket.conn.remoteAddress
+      socket.conn.remoteAddress
     );
     let battle = battles[socket.battleID];
     battle.gameController.emit("disconnect", socket);
@@ -205,12 +207,14 @@ var onDisconnect = (socket) => {
 
 var createCheckConnectionInterval = (socket) => {
   let interval = setInterval(() => {
-    if (socket.conncted) {
+    if (socket.connected) {
       let responded = false;
       socket.once("checkConnection", () => {
+        log(socket.conn.remoteAddress + " is here!");
         responded = true;
       });
       socket.emit("checkConnection", "");
+      log("Checking connection on " + socket.conn.remoteAddress);
       setTimeout(() => {
         if (!responded) {
           onDisconnect(socket);
@@ -219,35 +223,36 @@ var createCheckConnectionInterval = (socket) => {
           clearInterval(interval);
           delete socket;
         }
-      }, 300);
+      }, 900);
     } else {
+      log(socket.conn.remoteAddress + " is not connected. Deleting now.");
       socket.removeAllListeners();
       socket.disconnect();
       clearInterval(interval);
       delete socket;
     }
-  }, 500);
+  }, 1000);
 };
 
 var logCounts = () => {
   log("=====Server Status=====");
   log(
     "Number of players in main lobby: " +
-      Object.keys(mainLobby).length +
-      "      key: " +
-      Object.keys(mainLobby)
+    Object.keys(mainLobby).length +
+    "      key: " +
+    Object.keys(mainLobby)
   );
   log(
     "Number of players in queue: " +
-      Object.keys(playerQueue).length +
-      "           key: " +
-      Object.keys(playerQueue)
+    Object.keys(playerQueue).length +
+    "           key: " +
+    Object.keys(playerQueue)
   );
   log(
     "Number of running battles: " +
-      Object.keys(battles).length +
-      "            key: " +
-      Object.keys(battles)
+    Object.keys(battles).length +
+    "            key: " +
+    Object.keys(battles)
   );
   if (Object.keys(battles).length > 0)
     Object.keys(battles).forEach((key) => {
@@ -262,4 +267,9 @@ var logCounts = () => {
     });
   log();
 };
+
+setInterval(() => {
+  logCounts();
+}, 10000);
+
 log("Now listening on 8080...");

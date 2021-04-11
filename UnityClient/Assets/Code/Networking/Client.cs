@@ -24,6 +24,10 @@ public class Client : MonoBehaviour
     {
         client.Connected += Client_Connected;
         client.Disconnected += Client_Disconnected;
+        client.On("checkConnection", e =>
+        {
+            client.Emit("checkConnection", "");
+        });
         client.On("startBattle", (e) =>
         {
             addBattleListerners();
