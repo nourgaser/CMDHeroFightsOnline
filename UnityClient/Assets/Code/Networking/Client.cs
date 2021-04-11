@@ -124,7 +124,7 @@ public class Client : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        client.Emit("disconnect", "Disconnected.");
+        //client.Emit("disconnect", "Disconnected.");
         client.DisconnectAsync();
         client.Dispose();
     }

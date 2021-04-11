@@ -9,8 +9,8 @@ var initStats = (statsArr) => {
     statsArr["magicResist"] = new Stat("magicResist", 5);
     statsArr["physicalDamage"] = new Stat("physicalDamage", 50);
     statsArr["magicDamage"] = new Stat("magicDamage", 0);
-    statsArr["dodgeChance"] = new Stat("dodgeChance", 0.35);
-    statsArr["critChance"] = new Stat("critChance", 1);
+    statsArr["dodgeChance"] = new Stat("dodgeChance", 0.15);
+    statsArr["critChance"] = new Stat("critChance", 0.6);
 }
 
 var initModifiers = (hero, battle, turnToStart) => {
@@ -19,18 +19,12 @@ var initModifiers = (hero, battle, turnToStart) => {
 
 var initActions = (actionsArr) => {
     actionsArr["daggerStab"] = new Action("daggerStab", 3, (attacker, defender, battle) => {
-        let attackerLuck = attacker.stats["luck"].value;
-        let defenderLuck = defender.stats["luck"].value;
-
-
-        var dodge = (Action.applyChance(defender.stats["dodgeChance"].value - attackerLuck + defenderLuck)) ? 0 : 1;
-        var crit = (Action.applyChance(attacker.stats["critChance"].value + attackerLuck)) ? attacker.stats["critDamage"].value : 1;
-
-        var damageDealt = Math.floor(dodge * ((((Math.floor(Math.random() * (constants["daggerStabMax"] - constants["daggerStabMin"] + 1)) + constants["daggerStabMin"])
-            + attacker.stats["physicalDamage"].value * constants["daggerStabADScaling"]) * crit) - defender.stats["armor"].value) * (attackerLuck + 1));
+        let damageResult = Action.standardDamageCalculation(attacker, defender, constants["daggerStabMax"], constants["daggerStabMin"], "armor", constants["daggerStabADScaling"], 0);
+        let damageDealt = damageResult.damageDealt;
 
         defender.stats["hp"].value -= damageDealt;
-        if (crit === 1) {
+
+        if (damageResult.crit === 1) {
             return {
                 attackerRes: "Stabbed for " + damageDealt + " damage!",
                 defenderRes: "You just got stabbed for " + damageDealt + " damage!"
@@ -38,7 +32,7 @@ var initActions = (actionsArr) => {
         }
 
         //crit => apply/reapply poison
-        else if (dodge != 0) {
+        else if (damageResult.dodge != 0) {
             if (defender.stats["hp"].modifiers["poison"] === undefined) {
                 let values = [];
                 values["damage"] = 10;
@@ -86,6 +80,7 @@ var initActions = (actionsArr) => {
 
         var damageDealt = constants["excuteDamage"];
         defender.stats["hp"].value -= damageDealt;
+        delete actionsArr["excuse"];
         return {
             attackerRes: "Excuted your opponent! (" + constants["excuteDamage"] + " true damage)",
             defenderRes: "You just got excuted from poison! (" + constants["excuteDamage"] + " true damage)"
@@ -102,13 +97,12 @@ var initActions = (actionsArr) => {
 
 const constants = [];
 //ABILITY CONSTANTS
-constants["daggerStabMax"] = 10;
-constants["daggerStabMin"] = 1;
-//constants["daggerStabADScaling"] = 0.5;
-constants["daggerStabADScaling"] = 0.1;
+constants["daggerStabMax"] = 30;
+constants["daggerStabMin"] = 7;
+constants["daggerStabADScaling"] = 0.45;
 
 
-constants["excuteDamage"] = 100;
+constants["excuteDamage"] = 80;
 
 
 module.exports = {
