@@ -141,7 +141,7 @@ var createBattle = (p1, p2) => {
 };
 
 var moveSocketToMainLobby = (socket) => {
-  mainLobby[socket.id] = new Hero("warrior", socket);
+  mainLobby[socket.id] = new Hero("psychic", socket);
   addQueueListeners(socket);
   log(`Moving socket ${socket.id} to lobby. BattleID: ${socket.battleID}.`);
   log();
@@ -217,11 +217,11 @@ var createCheckConnectionInterval = (socket) => {
     if (socket.connected) {
       let responded = false;
       socket.once("checkConnection", () => {
-        log(socket.conn.remoteAddress + " is here!");
+        //log(socket.conn.remoteAddress + " is here!");
         responded = true;
       });
       socket.emit("checkConnection", "");
-      log("Checking connection on " + socket.conn.remoteAddress);
+      //log("Checking connection on " + socket.conn.remoteAddress);
       setTimeout(() => {
         if (!responded) {
           onDisconnect(socket);
@@ -277,6 +277,6 @@ var logCounts = () => {
 
 setInterval(() => {
   logCounts();
-}, 10000);
+}, 15000);
 
 log("Now listening on 8080...");
