@@ -37,12 +37,15 @@ class Hero {
         if (opponentHero.socket != null) {
             var clientStats = new Array();
             for (var statID in this.stats) {
-                if (this.stats[statID].name === "socket" /*|| other stats ignored here*/) continue;
-                var clientStat = {
-                    name: this.stats[statID].name,
-                    value: this.stats[statID].value
+                if (this.stats[statID].name === "hp" || this.stats[statID].name === "luck" || this.stats[statID].name === "class" /*|| other stats to be sent here*/) {
+                    let clientStat = {
+                        name: this.stats[statID].name,
+                        value: this.stats[statID].value
+                    }
+                    clientStats.push(clientStat);
                 }
-                clientStats.push(clientStat);
+                else
+                    continue;
             }
             opponentHero.socket.emit("opponentStats", clientStats);
         }
