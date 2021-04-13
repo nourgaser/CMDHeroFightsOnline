@@ -22,12 +22,13 @@ io.on("connection", (socket) => {
     writable: true,
   });
 
+  socket.emit("message", "You connected successfully!");
+
   //new connection
   if (disconnectedClients[socket.conn.remoteAddress] == undefined) {
     log();
     log(`=====New client connected: ${socket.conn.remoteAddress}=====`);
     log();
-    socket.emit("message", "You connected successfully!");
 
     moveSocketToMainLobby(socket);
   }
@@ -83,7 +84,7 @@ io.on("connection", (socket) => {
 
   setTimeout(() => {
     createCheckConnectionInterval(socket);
-  }, 15000);
+  }, 2000);
 });
 
 localEventEmitter.on("battleStarted", (battle) => {
@@ -210,6 +211,7 @@ var onDisconnect = (socket) => {
       log("Unknown error");
     }
   }
+  delete socket;
 };
 
 var createCheckConnectionInterval = (socket) => {

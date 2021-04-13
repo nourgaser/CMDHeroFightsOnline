@@ -1,8 +1,7 @@
-using UnityEngine;
-using System.Collections.Generic;
 using H.Socket.IO;
 using Newtonsoft.Json;
-using UnityEngine.UI;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class Client : MonoBehaviour
 {
@@ -14,14 +13,17 @@ public class Client : MonoBehaviour
 
     public GameObject networkContainer;
 
-    private void Awake()
-    {
-
-    }
+    public bool needsToAttemptToConnect = false;
 
     // Start is called before the first frame update
     void Start()
     {
+        connect();
+    }
+
+    void initClient()
+    {
+        client = new SocketIoClient();
         client.Connected += Client_Connected;
         client.Disconnected += Client_Disconnected;
         client.On("checkConnection", e =>
@@ -38,9 +40,6 @@ public class Client : MonoBehaviour
         {
             client.Emit("queuedIn", "");
         });
-
-
-        connect();
     }
 
     private void addBattleListerners()
@@ -108,22 +107,52 @@ public class Client : MonoBehaviour
     private void Client_Disconnected(object sender, H.WebSockets.Args.WebSocketCloseEventArgs e)
     {
         Debug.Log("Disconnected!");
+        needsToAttemptToConnect = true;
     }
 
     private async void connect()
     {
-        await client.ConnectAsync(url);
+        Debug.Log("Attempting to connect to the server...");
+        initClient();
+        try
+        {
+            await client.ConnectAsync(url);
+            Debug.Log("Connected successfully!");
+        }
+        catch
+        {
+            Debug.Log("Failed to connect to the server...");
+            needsToAttemptToConnect = true;
+        }
+
+        //int timeout = 3000;
+        //var task = client.ConnectAsync(url);
+        //if (await Task.WhenAny(task, Task.Delay(timeout)) == task)
+        //{
+        //    // task completed within timeout
+        //    Debug.Log("Connected successfully!");
+        //}
+        //else
+        //{
+        //    // timeout logic
+        //    Debug.Log("Failed to connect to the server...");
+        //    needsToAttemptToConnect = true;
+        //}
     }
 
     private void Client_Connected(object sender, H.Socket.IO.EventsArgs.SocketIoEventEventArgs e)
     {
-        Debug.Log("Connected!");
         client.Emit("queuedIn", "");
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (needsToAttemptToConnect)
+        {
+            needsToAttemptToConnect = false;
+            connect();
+        }
     }
 
     void OnApplicationQuit()

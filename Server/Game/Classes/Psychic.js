@@ -13,7 +13,6 @@ var initStats = (statsArr) => {
     statsArr["critChance"] = new Stat("critChance", statsDefaults["critChance"]);
     //unique
     statsArr["pistolAmmo"] = new Stat("pistolAmmo", statsDefaults["pistolAmmo"]);
-    statsArr["opponentStats"] = new Stat("opponentStats", statsDefaults["opponentStats"]);
     initOpponentStats(statsArr);
 }
 
@@ -96,6 +95,9 @@ const initActions = actionsArr => {
                 attackerRes += " magic damage: " + defender.stats["magicDamage"].value;
                 break;
         }
+
+        console.log("Opponent stats:");
+        console.log(attacker.stats["opponentStats"].value);
 
         return {
             attackerRes: attackerRes,
