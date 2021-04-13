@@ -77,7 +77,9 @@ class Battle {
                 loser.socket.emit('battleLost', "You lose :(");
             }
             clearInterval(this.turnTimer);
-            this.attacker.socket.removeAllListeners('turnEnded');
+            if (this.attacker.socket != null) {
+                this.attacker.socket.removeAllListeners('turnEnded');
+            }
             this.gameController.emit('battleEnded', "");
         });
         this.gameController.on('actionTaken', () => {

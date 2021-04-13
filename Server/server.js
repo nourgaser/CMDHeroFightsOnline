@@ -38,25 +38,32 @@ io.on("connection", (socket) => {
     let oldClient = disconnectedClients[socket.conn.remoteAddress];
     let oldLocation = oldClient.location;
     if (oldLocation === "battle") {
-      let battle = battles[oldClient.battle.id];
-      socket.battleID = battle.id;
+      if (battles[oldClient.battle.id] != undefined) {
+        let battle = battles[oldClient.battle.id];
+        socket.battleID = battle.id;
 
-      let reconnectingPlayer;
-      let playerNumber;
+        let reconnectingPlayer;
+        let playerNumber;
 
-      if (oldClient.playerNumber == 1) {
-        playerNumber = 1;
-        reconnectingPlayer = battle.player1;
-      } else {
-        playerNumber = 2;
-        reconnectingPlayer = battle.player2;
+        if (oldClient.playerNumber == 1) {
+          playerNumber = 1;
+          reconnectingPlayer = battle.player1;
+        } else {
+          playerNumber = 2;
+          reconnectingPlayer = battle.player2;
+        }
+        reconnectingPlayer.socket = socket;
+        reconnectingPlayer.socket.emit("startBattle", "");
+        log("Reconnected on player " + playerNumber);
+        battle.gameController.emit("reconnect", reconnectingPlayer);
+        logCounts();
       }
-      reconnectingPlayer.socket = socket;
-      reconnectingPlayer.socket.emit("startBattle", "");
-      log("Reconnected on player " + playerNumber);
-      battle.gameController.emit("reconnect", reconnectingPlayer);
-      logCounts();
-    } else if (oldLocation === "queue") {
+      else {
+        moveSocketToMainLobby(socket);
+      }
+    }
+    else {
+      moveSocketToMainLobby(socket);
     }
 
     delete disconnectedClients[socket.conn.remoteAddress];

@@ -14,6 +14,7 @@ var initStats = statsArr => {
     statsArr["critChance"] = new Stat("critChance", 0.1);
 }
 
+//battle-start modifiers here
 var initModifiers = (hero, battle, turnToStart) => {
     let values = [];
     values["value"] = 50;
