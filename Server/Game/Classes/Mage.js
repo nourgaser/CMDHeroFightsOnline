@@ -15,13 +15,13 @@ var initStats = statsArr => {
 }
 
 //battle-start modifiers here
-var initModifiers = (hero, battle, turnToStart) => {
+var initModifiers = (hero, battle, turnParity) => {
     let values = [];
     values["value"] = 50;
-    hero.stats["mana"].modifiers["manaPerTurn"] = new Modifier("Mana/Turn", "permanent-mana-incrementation", values, turnToStart, 99, "Mana gained per turn.");
+    hero.stats["mana"].modifiers["manaPerTurn"] = new Modifier("Mana/Turn", "permanent-mana-incrementation", values, turnParity, 99, "Mana gained per turn.");
 
     var gainMana = () => {
-        if (battle.turnCounter % 2 === turnToStart % 2) {
+        if (battle.turnCounter % 2 === turnParity % 2) {
             hero.stats["mana"].value += 50;
             battle.emitAllStats();
             //emit result
@@ -38,10 +38,9 @@ var initActions = actionsArr => {
     actionsArr["shootEnergy"] = new Action("shootEnergy", 3, (attacker, defender, battle) => {
 
         attacker.stats["mana"].value -= constants["shootEnergyManaCost"];
-        let damageResult = Action.standardDamageCalculation(attacker, defender, constants["shootEnergyMax"], constants["shootEnergyMin"], "magicResist", 0, constants["shootEnergyAPScaling"]);
+        let damageResult = Action.applyStandardDamage(attacker, defender, constants["shootEnergyMax"], constants["shootEnergyMin"], "magicResist", 0, constants["shootEnergyAPScaling"]);
         let damageDealt = damageResult.damageDealt;
 
-        defender.stats["hp"].value -= damageDealt;
         return {
             attackerRes: "mage used shootEnergy: " + damageDealt,
             defenderRes: "You just got hit for " + damageDealt + " damage!"

@@ -106,7 +106,7 @@ localEventEmitter.on("queueAppended", () => {
       ids[i] = key;
       i++;
     }
-    playerQueue[ids[1]] = new Hero("rogue", playerQueue[ids[1]].socket);
+    playerQueue[ids[1]] = new Hero("tank", playerQueue[ids[1]].socket);
     createBattle(playerQueue[ids[0]], playerQueue[ids[1]]);
     delete playerQueue[ids[0]];
     delete playerQueue[ids[1]];

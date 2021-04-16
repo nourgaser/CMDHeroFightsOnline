@@ -76,7 +76,7 @@ class Hero {
         this.stats["moves"] = new Stat("moves", 3);
         this.stats["critDamage"] = new Stat("critDamage", 1.5);
         this.stats["luck"] = new Stat("luck", 0);
-        this.stats["_zero"] = new Stat("_zero", 0);
+        //this.stats["noResist"] = new Stat("noResist", 0);
     }
 
     addDefaultTurnActions() {
@@ -85,8 +85,8 @@ class Hero {
             attacker.stats["luck"].value += 0.05;
 
             let res = {
-                attackerRes: "Increased luck by 10%!",
-                defenderRes: "Opponent increased luck by 10%!"
+                attackerRes: "Increased luck by 5%!",
+                defenderRes: "Opponent increased luck by 5%!"
             }
             delete this.actions["luckUp"];
             return res;

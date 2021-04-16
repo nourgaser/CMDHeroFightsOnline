@@ -118,6 +118,7 @@ class Battle {
     takeTurn() {
         this.attacker.stats["moves"].value = this.moves;
         this.attacker.addDefaultTurnActions();
+        this.gameController.emit('defaultActionsAdded', "");
 
         if (this.attacker.socket != null) {
             this.attacker.socket.emit('turnStarted', "");
