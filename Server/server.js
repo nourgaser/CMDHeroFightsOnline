@@ -8,10 +8,10 @@ const io = require("socket.io")(8080, {
 
 const log = console.log;
 
-const mainLobby = [];
-const playerQueue = [];
-const battles = [];
-const disconnectedClients = []; //socket.conn.remoteAddress used as key
+const mainLobby = []; //socket.id -> socket
+const playerQueue = []; //socket.id -> hero
+const battles = []; //battle.id -> battle
+const disconnectedClients = []; //socket.conn.remoteAddress -> custom disconnected client data object
 
 const localEventEmitter = new EventEmitter();
 
@@ -106,7 +106,6 @@ localEventEmitter.on("queueAppended", () => {
       ids[i] = key;
       i++;
     }
-    playerQueue[ids[1]] = new Hero("tank", playerQueue[ids[1]].socket);
     createBattle(playerQueue[ids[0]], playerQueue[ids[1]]);
     delete playerQueue[ids[0]];
     delete playerQueue[ids[1]];
@@ -117,32 +116,32 @@ localEventEmitter.on("queueAppended", () => {
 });
 
 var createBattle = (p1, p2) => {
-  p1.socket.emit("startBattle", "");
-  p2.socket.emit("startBattle", "");
-
+  
   var b = new Battle(p1, p2);
   Object.defineProperty(b, "id", {
     value: uniqueID(),
     writable: false,
   });
-
+  
   //adding the battle ID to both players.
   p1.socket.battleID = b.id;
   p2.socket.battleID = b.id;
-
+  
   log();
   log("=====New battle started!=====");
   log("Player 1 battle ID:" + p1.socket.battleID);
   log("Player 2 battle ID:" + p2.socket.battleID);
   log("Battle ID:" + b.id);
   log();
-
+  
   battles[b.id] = b;
   localEventEmitter.emit("battleStarted", b);
+  p1.socket.emit("startBattle", "");
+  p2.socket.emit("startBattle", "");
 };
 
 var moveSocketToMainLobby = (socket) => {
-  mainLobby[socket.id] = new Hero("psychic", socket);
+  mainLobby[socket.id] = socket;
   addQueueListeners(socket);
   log(`Moving socket ${socket.id} to lobby. BattleID: ${socket.battleID}.`);
   log();
@@ -151,8 +150,8 @@ var moveSocketToMainLobby = (socket) => {
 };
 
 var addQueueListeners = (socket) => {
-  socket.once("queuedIn", () => {
-    playerQueue[socket.id] = mainLobby[socket.id];
+  socket.once("queuedIn", (classID) => {
+    playerQueue[socket.id] =  new Hero(classID, socket);
     delete mainLobby[socket.id];
     //DEBUG
     logCounts();
