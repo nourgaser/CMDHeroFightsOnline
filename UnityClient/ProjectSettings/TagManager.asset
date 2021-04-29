@@ -9,6 +9,7 @@ TagManager:
   - UIStatOpponent
   - actionButtons
   - endTurnButton
+  - classChoiceButton
   layers:
   - Default
   - TransparentFX

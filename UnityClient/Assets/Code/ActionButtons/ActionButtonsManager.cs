@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using H.Socket.IO;
 namespace ActionButtons
 {
     public class ActionButtonsManager : MonoBehaviour
@@ -9,7 +10,7 @@ namespace ActionButtons
         private Button endTurnButton;
         private List<Button> actionButtons = new List<Button>();
         //private Button btn;
-        private Client networking;
+        private SocketIoClient client = NetworkManager.client;
 
         public static bool actionsChanged = false;
 
@@ -21,7 +22,6 @@ namespace ActionButtons
             {
                 actionButtons.Add(action.GetComponent<Button>());
             }
-            networking = GameObject.Find("[  Code - Networking ]").GetComponent<Client>();
             //btn = GetComponent<Button>();
         }
 
@@ -52,7 +52,7 @@ namespace ActionButtons
                 actionButtons[i].onClick.RemoveAllListeners();
                 actionButtons[i].onClick.AddListener(() =>
                 {
-                    networking.client.Emit("action", action.name);
+                    client.Emit("action", action.name);
                     //actionButtons[i].transform.gameObject.SetActive(false);
                     Debug.Log("Button clicked");
                 }); 
@@ -62,7 +62,7 @@ namespace ActionButtons
             endTurnButton.onClick.RemoveAllListeners();
             endTurnButton.onClick.AddListener(() =>
             {
-                networking.client.Emit("turnEnded");
+                client.Emit("turnEnded");
                 Debug.Log("Ending turn..");
                 endTurnButton.interactable = false;
             });

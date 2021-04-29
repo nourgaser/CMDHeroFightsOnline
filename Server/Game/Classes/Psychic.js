@@ -33,11 +33,17 @@ var initModifiers = (hero, battle, turnToStart) => {
 const initActions = actionsArr => {
     actionsArr["mindInvasion"] = new Action("mindInvasion", 3, (attacker, defender, battle) => {
 
-        let damageResult = Action.standardDamageCalculation(attacker, defender, constants["mindInvasionMax"], constants["mindInvasionMin"], "magicResist", 0, constants["mindInvasionAPScaling"]);
+        let damageResult = Action.applyStandardDamage(attacker, defender, constants["mindInvasionMax"], constants["mindInvasionMin"], "magicResist", 0, constants["mindInvasionAPScaling"]);
 
         let damageDealt = damageResult.damageDealt;
-        
-        defender.stats["hp"].value -= damageDealt;
+
+        if (defender.classID == "tank" && defender.stats["magicResist"].value > 0) {
+            return {
+                attackerRes: "Tried to invade opponent's mind but reflected for " + damageDealt + " and destroyed " + damageResult.tank.amountOfResistanceBroken + " magic resist",
+                defenderRes: "Opponent tried to invade your mind but reflected for " + damageDealt + " and destroyed " + damageResult.tank.amountOfResistanceBroken + " magic resist"
+            }
+        }
+
         return {
             attackerRes: "Invaded opponent's mind and dealt " + damageDealt + " damage!",
             defenderRes: "Your mind got invaded and damaged for " + damageDealt + " damage!"
@@ -49,11 +55,9 @@ const initActions = actionsArr => {
 
         attacker.stats["pistolAmmo"].value--;
 
-        let damageResult = Action.standardDamageCalculation(attacker, defender, constants["firePistolMax"], constants["firePistolMin"], "armor", constants["firePistolADScaling"], 0);
+        let damageResult = Action.applyStandardDamage(attacker, defender, constants["firePistolMax"], constants["firePistolMin"], "armor", constants["firePistolADScaling"], 0);
 
         let damageDealt = damageResult.damageDealt;
-
-        defender.stats["hp"].value -= damageDealt;
 
         return {
             attackerRes: "Fired pistol and dealt " + damageDealt + " damage!",

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using H.Socket.IO;
 using System;
 
 namespace UI
@@ -13,14 +14,11 @@ namespace UI
         private GameObject textToDisplayObj;
         private GameObject[] yourStatsTextArr;
         private GameObject[] opponentStatsTextArr;
-        private Client networking;
-
         private void Awake()
         {
             textToDisplayObj = GameObject.Find("anyText");
             yourStatsTextArr = GameObject.FindGameObjectsWithTag("UIStatYours");
             opponentStatsTextArr = GameObject.FindGameObjectsWithTag("UIStatOpponent");
-            networking = GameObject.Find("[  Code - Networking ]").GetComponent<Client>();
         }
 
         // Start is called before the first frame update

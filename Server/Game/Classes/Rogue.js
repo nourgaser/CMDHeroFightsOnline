@@ -19,10 +19,8 @@ var initModifiers = (hero, battle, turnToStart) => {
 
 var initActions = (actionsArr) => {
     actionsArr["daggerStab"] = new Action("daggerStab", 3, (attacker, defender, battle) => {
-        let damageResult = Action.standardDamageCalculation(attacker, defender, constants["daggerStabMax"], constants["daggerStabMin"], "armor", constants["daggerStabADScaling"], 0);
+        let damageResult = Action.applyStandardDamage(attacker, defender, constants["daggerStabMax"], constants["daggerStabMin"], "armor", constants["daggerStabADScaling"], 0);
         let damageDealt = damageResult.damageDealt;
-
-        defender.stats["hp"].value -= damageDealt;
 
         if (damageResult.crit === 1) {
             return {
@@ -99,7 +97,7 @@ const constants = [];
 //ABILITY CONSTANTS
 constants["daggerStabMax"] = 30;
 constants["daggerStabMin"] = 7;
-constants["daggerStabADScaling"] = 0.45;
+constants["daggerStabADScaling"] = 0.4;
 
 
 constants["excuteDamage"] = 80;

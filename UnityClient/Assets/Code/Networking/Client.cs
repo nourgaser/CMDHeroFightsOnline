@@ -2,17 +2,15 @@ using H.Socket.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Client : MonoBehaviour
 {
     private static readonly System.Uri url = new System.Uri("http://192.168.1.105:8080/socket.io/");
 
-    public SocketIoClient client = new SocketIoClient();
+    public static SocketIoClient client;
 
     public static bool isTurn = false;
-
-    public GameObject networkContainer;
-
     public bool needsToAttemptToConnect = false;
 
     // Start is called before the first frame update
@@ -32,13 +30,14 @@ public class Client : MonoBehaviour
         });
         client.On("startBattle", (e) =>
         {
-            addBattleListerners();
+            //addBattleListerners();
+            Debug.Log("starting battle");
         });
 
         //TEMP!!!
         client.On("backToMainLobby", (e) =>
         {
-            client.Emit("queuedIn", "");
+
         });
     }
 
@@ -124,25 +123,10 @@ public class Client : MonoBehaviour
             Debug.Log("Failed to connect to the server...");
             needsToAttemptToConnect = true;
         }
-
-        //int timeout = 3000;
-        //var task = client.ConnectAsync(url);
-        //if (await Task.WhenAny(task, Task.Delay(timeout)) == task)
-        //{
-        //    // task completed within timeout
-        //    Debug.Log("Connected successfully!");
-        //}
-        //else
-        //{
-        //    // timeout logic
-        //    Debug.Log("Failed to connect to the server...");
-        //    needsToAttemptToConnect = true;
-        //}
     }
 
     private void Client_Connected(object sender, H.Socket.IO.EventsArgs.SocketIoEventEventArgs e)
     {
-        client.Emit("queuedIn", "");
     }
 
     // Update is called once per frame

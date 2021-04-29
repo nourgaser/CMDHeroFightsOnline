@@ -19,11 +19,10 @@ var initModifiers = (hero, battle, turnToStart) => {
 const initActions = actionsArr => {
     actionsArr["swingSword"] = new Action("swingSword", 3, (attacker, defender, battle) => {
 
-        let damageResult = Action.standardDamageCalculation(attacker, defender, constants["swingSwordMax"], constants["swingSwordMin"], "armor", constants["swingSwordADScaling"], 0);
+        let damageResult = Action.applyStandardDamage(attacker, defender, constants["swingSwordMax"], constants["swingSwordMin"], "armor", constants["swingSwordADScaling"], 0);
 
         let damageDealt = damageResult.damageDealt;
 
-        defender.stats["hp"].value -= damageDealt;
         return {
             attackerRes: "Sword swung for " + damageDealt + " damage!",
             defenderRes: "You just got hit for " + damageDealt + " damage!"
@@ -53,7 +52,7 @@ const initActions = actionsArr => {
     // });
     actionsArr["chaaaarge!"] = new Action("chaaaarge!", 7, (attacker, defender, battle) => {
 
-        let damageResult = Action.standardDamageCalculation(attacker, defender, constants["chargeDamage"], constants["chargeDamage"], "armor", constants["chargeADScaling"], 0);
+        let damageResult = Action.applyStandardDamage(attacker, defender, constants["chargeDamage"], constants["chargeDamage"], "armor", constants["chargeADScaling"], 0);
         let damageDealt = damageResult.damageDealt;
 
         let res = {
@@ -62,7 +61,6 @@ const initActions = actionsArr => {
         }
 
         if (damageResult.dodge != 0) {
-            defender.stats["hp"].value -= damageDealt;
             res.attackerRes = `You chaaarged angrily and dealt ${damageDealt} damage! You also forcefully take an additional turn.`;
             res.defenderRes = `Your opponent chaaarged angrily and dealt ${damageDealt} damage! They also forcefully take an additional turn.`
         }
