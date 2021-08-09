@@ -2,6 +2,7 @@ const Hero = require("./Game/hero");
 const Battle = require("./Game/Battle");
 const uniqueID = require("uniqid");
 const EventEmitter = require("events");
+require('dotenv').config();
 const io = require("socket.io")(8080, {
   allowEIO3: true,
 });

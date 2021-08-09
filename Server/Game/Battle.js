@@ -1,7 +1,5 @@
-const { debug } = require('console');
 const EventEmitter = require('events');
-const AllClasses = require('./Classes/all-classes');
-const Hero = require('./hero');
+const {classes} = require('./Classes/all-classes');
 
 const TURN_TIME = 60;
 
@@ -13,6 +11,7 @@ class Battle {
     moves = 3;
     turnCounter = 0;
 
+    turnTimer;
     turnTimerSeconds = TURN_TIME;
     turnTimerLastChecked = 0;
     battleEnded = false;
@@ -49,8 +48,8 @@ class Battle {
         this.attacker.isTurn = true;
         this.defender.isTurn = false;
 
-        AllClasses.classes[this.attacker.classID].initModifiers(this.attacker, this, this.turnCounter);
-        AllClasses.classes[this.defender.classID].initModifiers(this.defender, this, this.turnCounter + 1);
+        classes[this.attacker.classID].initModifiers(this.attacker, this, this.turnCounter);
+        classes[this.defender.classID].initModifiers(this.defender, this, this.turnCounter + 1);
 
         this.gameController.on('advanceTurn', () => {
             console.log("GameController: Advancing turn...");
@@ -114,6 +113,7 @@ class Battle {
                 console.log("battle says: player reconnected as defender");
             }
         });
+
         this.takeTurn();
     }
 
@@ -176,8 +176,6 @@ class Battle {
         this.battleEnded = ended;
         return ended;
     }
-
-    turnTimer;
 
     startTurnTimer = () => {
 

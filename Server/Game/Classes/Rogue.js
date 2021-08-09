@@ -1,4 +1,3 @@
-const Stat = require("../Stat");
 const Action = require("../Action");
 const Modifier = require("../Modifier");
 const {applyChance, applyStandardDamage} = require('../../modules/calculation-tools');

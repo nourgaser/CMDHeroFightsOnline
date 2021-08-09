@@ -1,4 +1,3 @@
-const Stat = require('../Stat');
 const Action = require('../Action');
 const initStatsModule = require('../../modules/init-stats');
 

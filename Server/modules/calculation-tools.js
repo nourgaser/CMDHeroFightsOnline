@@ -1,6 +1,7 @@
 const applyChance = (chance) => {
     return ((Math.round(Math.random() * 100) + 1) <= (chance * 100));
 }
+
 const applyStandardDamage = (attacker, defender, maxDamage, minDamage, resistType, adScaling, apScaling) => {
     let attackerLuck = attacker.stats["luck"].value;
     let defenderLuck = defender.stats["luck"].value;
@@ -9,14 +10,14 @@ const applyStandardDamage = (attacker, defender, maxDamage, minDamage, resistTyp
     let res = {
         damageDealt: 0,
         crit: 1,
-        dodge: (this.applyChance(defender.stats["dodgeChance"].value - attackerLuck + defenderLuck)) ? 0 : 1,
+        dodge: (applyChance(defender.stats["dodgeChance"].value - attackerLuck + defenderLuck)) ? 0 : 1,
         tank : {
             amountOfResistanceBroken: 0
         }
     }
 
     if (res.dodge != 0) {
-        res.crit = (this.applyChance(attacker.stats["critChance"].value + attackerLuck)) ? attacker.stats["critDamage"].value : 1;
+        res.crit = (applyChance(attacker.stats["critChance"].value + attackerLuck)) ? attacker.stats["critDamage"].value : 1;
         damageBeforeLuck = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
         if (attackerLuck >= 0) damageBeforeScaling = damageBeforeLuck + ((maxDamage - damageBeforeLuck) * attackerLuck);
         else damageBeforeScaling = damageBeforeLuck - ((damageBeforeLuck - minDamage) * (attackerLuck * -1));
