@@ -1,29 +1,10 @@
 const Stat = require('../Stat');
 const Action = require('../Action');
+const { applyChance, applyStandardDamage } = require('../../modules/calculation-tools');
+const initStatsModule = require('../../modules/init-stats');
 
-var initStats = (statsArr) => {
-    //default
-    statsArr["class"] = new Stat("class", "psychic");
-    statsArr["hp"] = new Stat("hp", statsDefaults["hp"]);
-    statsArr["armor"] = new Stat("armor", statsDefaults["armor"]);
-    statsArr["magicResist"] = new Stat("magicResist", statsDefaults["magicResist"]);
-    statsArr["physicalDamage"] = new Stat("physicalDamage", statsDefaults["physicalDamage"]);
-    statsArr["magicDamage"] = new Stat("magicDamage", statsDefaults["magicDamage"]);
-    statsArr["dodgeChance"] = new Stat("dodgeChance", statsDefaults["dodgeChance"]);
-    statsArr["critChance"] = new Stat("critChance", statsDefaults["critChance"]);
-    //unique
-    statsArr["pistolAmmo"] = new Stat("pistolAmmo", statsDefaults["pistolAmmo"]);
-    initOpponentStats(statsArr);
-}
-
-var initOpponentStats = statsArr => {
-    statsArr["opponentStats"] = new Stat("opponentStats", []);
-    statsArr["opponentStats"].value["armor"] = -1;
-    statsArr["opponentStats"].value["magicResist"] = -1;
-    statsArr["opponentStats"].value["physicalDamage"] = -1;
-    statsArr["opponentStats"].value["magicDamage"] = -1;
-    statsArr["opponentStats"].value["dodgeChance"] = -1;
-    statsArr["opponentStats"].value["critChance"] = -1;
+var initStats = statsArr => {
+    initStatsModule(statsArr, defaultStats, uniqueStats);
 }
 
 //battle-start modifiers here
@@ -33,7 +14,7 @@ var initModifiers = (hero, battle, turnToStart) => {
 const initActions = actionsArr => {
     actionsArr["mindInvasion"] = new Action("mindInvasion", 3, (attacker, defender, battle) => {
 
-        let damageResult = Action.applyStandardDamage(attacker, defender, constants["mindInvasionMax"], constants["mindInvasionMin"], "magicResist", 0, constants["mindInvasionAPScaling"]);
+        let damageResult = applyStandardDamage(attacker, defender, constants["mindInvasionMax"], constants["mindInvasionMin"], "magicResist", 0, constants["mindInvasionAPScaling"]);
 
         let damageDealt = damageResult.damageDealt;
 
@@ -55,7 +36,7 @@ const initActions = actionsArr => {
 
         attacker.stats["pistolAmmo"].value--;
 
-        let damageResult = Action.applyStandardDamage(attacker, defender, constants["firePistolMax"], constants["firePistolMin"], "armor", constants["firePistolADScaling"], 0);
+        let damageResult = applyStandardDamage(attacker, defender, constants["firePistolMax"], constants["firePistolMin"], "armor", constants["firePistolADScaling"], 0);
 
         let damageDealt = damageResult.damageDealt;
 
@@ -149,26 +130,33 @@ constants["firePistolMax"] = 25;
 constants["firePistolADScaling"] = 1.9;
 
 //STATS CONSTANTS
-const statsDefaults = [];
+const defaultStats = [];
 //default
-statsDefaults["hp"] = 260;
-statsDefaults["armor"] = 10;
-statsDefaults["magicResist"] = 10;
-statsDefaults["physicalDamage"] = 8;
-statsDefaults["magicDamage"] = 10;
-statsDefaults["dodgeChance"] = 0.1;
-statsDefaults["critChance"] = 0.2;
+defaultStats["hp"] = 260;
+defaultStats["armor"] = 10;
+defaultStats["magicResist"] = 10;
+defaultStats["physicalDamage"] = 8;
+defaultStats["magicDamage"] = 10;
+defaultStats["dodgeChance"] = 0.1;
+defaultStats["critChance"] = 0.2;
 
 //unique
-statsDefaults["pistolAmmo"] = 3;
-
+const uniqueStats = [];
+uniqueStats["pistolAmmo"] = 3;
+uniqueStats["opponentStats"] = new Stat("opponentStats", []);
+uniqueStats["opponentStats"].value["armor"] = -1;
+uniqueStats["opponentStats"].value["magicResist"] = -1;
+uniqueStats["opponentStats"].value["physicalDamage"] = -1;
+uniqueStats["opponentStats"].value["magicDamage"] = -1;
+uniqueStats["opponentStats"].value["dodgeChance"] = -1;
+uniqueStats["opponentStats"].value["critChance"] = -1;
 
 module.exports = {
     initStats: initStats,
     initActions: initActions,
     initModifiers: initModifiers,
     constants: constants,
-    statsDefaults: statsDefaults
+    statsDefaults: defaultStats
 };
 
 

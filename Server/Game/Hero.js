@@ -1,4 +1,4 @@
-const AllClasses = require('./Classes/All');
+const {classes} = require('./Classes/all-classes');
 const Stat = require('./Stat');
 const Action = require('./Action');
 const Modifier = require('./Modifier');
@@ -10,8 +10,8 @@ class Hero {
     isTurn;
     socket;
     constructor(classID, socket) {
-        AllClasses.classes[classID].initStats(this.stats);
-        AllClasses.classes[classID].initActions(this.actions);
+        classes[classID].initStats(this.stats);
+        classes[classID].initActions(this.actions);
         this.initGeneralStatsAndActions();
 
         this.socket = socket;
@@ -34,21 +34,20 @@ class Hero {
 
     //send this hero's stats to their opponent
     emitOpponentStats(opponentHero) {
-        if (opponentHero.socket != null) {
-            var clientStats = new Array();
-            for (var statID in this.stats) {
-                if (this.stats[statID].name === "hp" || this.stats[statID].name === "luck" || this.stats[statID].name === "class" /*|| other stats to be sent here*/) {
-                    let clientStat = {
-                        name: this.stats[statID].name,
-                        value: this.stats[statID].value
-                    }
-                    clientStats.push(clientStat);
+        var clientStats = new Array();
+        for (var statID in this.stats) {
+            if (this.stats[statID].name === "hp" || this.stats[statID].name === "luck" || this.stats[statID].name === "class" /*|| other stats to be sent here*/) {
+                let clientStat = {
+                    name: this.stats[statID].name,
+                    value: this.stats[statID].value
                 }
-                else
-                    continue;
+                clientStats.push(clientStat);
             }
-            opponentHero.socket.emit("opponentStats", clientStats);
+            else
+                continue;
         }
+        opponentHero.socket.emit("opponentStats", clientStats);
+
     }
 
     emitAvailableActions(opponentHero) {

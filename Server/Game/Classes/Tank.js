@@ -1,16 +1,11 @@
 const Stat = require('../Stat');
 const Action = require('../Action');
 const Modifier = require('../Modifier');
+const { applyChance, applyStandardDamage } = require('../../modules/calculation-tools');
+const initStatsModule = require('../../modules/init-stats');
 
-var initStats = (statsArr) => {
-    statsArr["class"] = new Stat("class", "tank");
-    statsArr["hp"] = new Stat("hp", statsDefaults["hp"]);
-    statsArr["armor"] = new Stat("armor", statsDefaults["armor"]);
-    statsArr["magicResist"] = new Stat("magicResist", statsDefaults["magicResist"]);
-    statsArr["physicalDamage"] = new Stat("physicalDamage", statsDefaults["physicalDamage"]);
-    statsArr["magicDamage"] = new Stat("magicDamage", statsDefaults["magicDamage"]);
-    statsArr["dodgeChance"] = new Stat("dodgeChance", statsDefaults["dodgeChance"]);
-    statsArr["critChance"] = new Stat("critChance", statsDefaults["critChance"]);
+var initStats = statsArr => {
+    initStatsModule(statsArr, defaultStats, uniqueStats);
 }
 
 var initModifiers = (hero, battle, turnParity) => {
@@ -62,7 +57,7 @@ const initActions = actionsArr => {
 
     actionsArr["bodySlam"] = new Action("bodySlam", 3, (attacker, defender, battle) => {
 
-        let damageResult = Action.applyStandardDamage(attacker, defender, constants["bodySlamMax"], constants["bodySlamMin"], "armor", constants["bodySlamADScaling"], 0);
+        let damageResult = applyStandardDamage(attacker, defender, constants["bodySlamMax"], constants["bodySlamMin"], "armor", constants["bodySlamADScaling"], 0);
         if (damageResult.dodge === 0) {
             return {
                 attackerRes: `You tried to slam into your opponent but missed!`,
@@ -105,8 +100,8 @@ const initActions = actionsArr => {
     });
     actionsArr["regenerateResist"] = new Action("regenerateResist", 6, (attacker, defender, battle) => {
 
-        attacker.stats["armor"].value = Math.ceil(statsDefaults["armor"] * constants["regenerateResistPercentage"] );
-        attacker.stats["magicResist"].value = Math.ceil(statsDefaults["magicResist"]  * constants["regenerateResistPercentage"]);
+        attacker.stats["armor"].value = Math.ceil(defaultStats["armor"] * constants["regenerateResistPercentage"]);
+        attacker.stats["magicResist"].value = Math.ceil(defaultStats["magicResist"] * constants["regenerateResistPercentage"]);
 
         delete attacker.actions["regenerateResist"];
         return {
@@ -129,21 +124,26 @@ constants["throwRockDamage"] = 50;
 
 constants["regenerateResistPercentage"] = 0.5;
 
-const statsDefaults = [];
-statsDefaults["hp"] = 380;
-statsDefaults["armor"] = 50;
-statsDefaults["magicResist"] = 50;
-statsDefaults["physicalDamage"] = 20;
-statsDefaults["magicDamage"] = 5;
-statsDefaults["dodgeChance"] = 0;
-statsDefaults["critChance"] = 0.1;
+//STATS CONSTANTS
 
+//default
+const defaultStats = [];
+defaultStats["hp"] = 380;
+defaultStats["armor"] = 50;
+defaultStats["magicResist"] = 50;
+defaultStats["physicalDamage"] = 20;
+defaultStats["magicDamage"] = 5;
+defaultStats["dodgeChance"] = 0;
+defaultStats["critChance"] = 0.1;
 
+//unique
+const uniqueStats = [];
 
 module.exports = {
-    initStats: initStats,
-    initActions: initActions,
-    initModifiers: initModifiers,
-    constants: constants,
-    statsDefaults: statsDefaults
+    initStats,
+    initActions,
+    initModifiers,
+    constants,
+    defaultStats,
+    uniqueStats
 };

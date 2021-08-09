@@ -1,7 +1,7 @@
 const { debug } = require('console');
 const EventEmitter = require('events');
-const AllClasses = require('./Classes/All');
-const Hero = require('./Hero');
+const AllClasses = require('./Classes/all-classes');
+const Hero = require('./hero');
 
 const TURN_TIME = 60;
 
@@ -146,8 +146,8 @@ class Battle {
 
             this.attacker.stats["moves"].value -= this.attacker.actions[e].moveCost;
             var actionRes = this.attacker.actions[e].invoke(this.attacker, this.defender, this);
-            if (this.attacker.socket != null) this.attacker.socket.emit("actionTaken", actionRes.attackerRes);
-            if (this.defender.socket != null) this.defender.socket.emit("actionTaken", actionRes.defenderRes);
+            this.attacker.socket.emit("actionTaken", actionRes.attackerRes);
+            this.defender.socket.emit("actionTaken", actionRes.defenderRes);
 
             this.gameController.emit("advancePostActionModifiers", "");
 
@@ -183,10 +183,8 @@ class Battle {
 
         this.turnTimer = setInterval(() => {
             if (this.turnTimerSeconds > 0 && this.turnTimerSeconds < 1) {
-                if (this.attacker.socket != null) {
-                    this.attacker.socket.removeAllListeners('turnEnded');
-                    //emit that they missed their turn
-                }
+                this.attacker.socket.removeAllListeners('turnEnded');
+                //emit that they missed their turn
                 console.log("Player missed their turn...");
             }
             else if (this.turnTimerSeconds <= 0) {
@@ -203,7 +201,6 @@ class Battle {
 
         }, 1000);
     }
-
 }
 
 module.exports = Battle;

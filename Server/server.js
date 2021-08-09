@@ -1,4 +1,4 @@
-const Hero = require("./Game/Hero");
+const Hero = require("./Game/hero");
 const Battle = require("./Game/Battle");
 const uniqueID = require("uniqid");
 const EventEmitter = require("events");
@@ -16,30 +16,22 @@ const localEventEmitter = new EventEmitter();
 
 io.on("connection", (socket) => {
   //define and init battleID property
-  Object.defineProperty(socket, "battleID", {
-    value: null,
-    writable: true,
-  });
+  socket.battleID = null;
 
   //new connection
   log(`=====New client connected: ${socket.conn.remoteAddress}=====`);
 
-  moveSocketToMainLobby(socket);
+  moveToMainLobby(socket);
 
   socket.on("disconnect", () => {
-    onDisconnect(socket);
+    disconnect(socket);
   });
-
-  //handshake every so often to make sure client is there, disconnects them if no response arrives.
-  // setTimeout(() => {
-  //   createCheckConnectionInterval(socket);
-  // }, 5000);
 });
 
 localEventEmitter.on("battleStarted", (battle) => {
   battle.gameController.once("battleEnded", () => {
-    if (battle.player1.socket != null) battle.player1.socket.battleID = null;
-    if (battle.player2.socket != null) battle.player2.socket.battleID = null;
+    battle.player1.socket.battleID = null;
+    battle.player2.socket.battleID = null;
     battle.gameController.removeAllListeners();
     delete battles[battle.id];
     log("Battle ended!");
@@ -64,13 +56,10 @@ localEventEmitter.on("queueAppended", () => {
   }
 });
 
-var createBattle = (p1, p2) => {
+const createBattle = (p1, p2) => {
 
   var b = new Battle(p1, p2);
-  Object.defineProperty(b, "id", {
-    value: uniqueID(),
-    writable: false,
-  });
+  b.id = uniqueID();
 
   //adding the battle ID to both players.
   p1.socket.battleID = b.id;
@@ -89,7 +78,7 @@ var createBattle = (p1, p2) => {
   p2.socket.emit("startBattle", "");
 };
 
-var moveSocketToMainLobby = (socket) => {
+const moveToMainLobby = socket => {
   mainLobby[socket.id] = socket;
   addQueueListeners(socket);
   log(`Moving socket ${socket.id} to lobby. BattleID: ${socket.battleID}.`);
@@ -98,6 +87,10 @@ var moveSocketToMainLobby = (socket) => {
   setTimeout(logCounts, 100);
 };
 
+const toQueue = socket => {
+
+}
+
 var addQueueListeners = (socket) => {
   socket.once("queuedIn", (classID) => {
     playerQueue[socket.id] = new Hero(classID, socket);
@@ -105,54 +98,26 @@ var addQueueListeners = (socket) => {
     //DEBUG
     logCounts();
     socket.once("queuedOut", () => {
-      moveSocketToMainLobby(socket);
+      moveToMainLobby(socket);
       delete playerQueue[socket.id];
     });
     localEventEmitter.emit("queueAppended", "");
   });
 };
 
-var onDisconnect = (socket) => {
-  if (socket.battleID != null && !battles[socket.battleID].battleEnded) {
+const disconnect = (socket) => {
+  if (socket.battleID && !battles[socket.battleID].battleEnded) {
     log(
       "Client disconnected while in non-determined battle... " +
       socket.conn.remoteAddress
     );
-    let battle = battles[socket.battleID];
-    battle.gameController.emit("disconnect", socket);
-    disconnectedClients[socket.conn.remoteAddress] = {
-      location: "battle",
-      time: Date.now(),
-      battle: battle,
-      remoteAddress: Object.assign(socket.conn.remoteAddress),
-      playerNumber: 0,
-    };
-
-    if (battle.player1.socket != null) {
-      if (
-        socket.conn.remoteAddress == battle.player1.socket.conn.remoteAddress
-      ) {
-        disconnectedClients[socket.conn.remoteAddress].playerNumber = 1;
-        battle.player1.socket = null;
-      } else {
-        disconnectedClients[socket.conn.remoteAddress].playerNumber = 2;
-        battle.player2.socket = null;
-      }
-    } else {
-      disconnectedClients[socket.conn.remoteAddress].playerNumber = 2;
-      battle.player2.socket = null;
-    }
   } else {
-    if (
-      socket.battleID != undefined &&
-      socket.battleID != null &&
-      battles[socket.battleID].battleEnded
-    ) {
+    if (socket.battleID && battles[socket.battleID].battleEnded) {
       log("Client disconnected after match ended");
-    } else if (mainLobby[socket.id] != undefined) {
+    } else if (mainLobby[socket.id]) {
       log("Client disconnected in mainLobby");
       delete mainLobby[socket.id];
-    } else if (playerQueue[socket.id] != undefined) {
+    } else if (playerQueue[socket.id]) {
       log("Client disconnected in queue");
       delete playerQueue[socket.id];
     } else {
@@ -178,13 +143,13 @@ var createCheckConnectionInterval = (socket) => {
       setTimeout(() => {
         if (!responded) {
           log(socket.conn.remoteAddress + " is not responding. Disconnecting now.");
-          onDisconnect(socket);
+          disconnect(socket);
           clearInterval(interval);
         }
       }, 999);
     } else {
       log(socket.conn.remoteAddress + " is not connected. Disconnecting now.");
-      onDisconnect(socket);
+      disconnect(socket);
       clearInterval(interval);
       logCounts();
     }
@@ -215,12 +180,8 @@ var logCounts = () => {
     Object.keys(battles).forEach((key) => {
       log();
       log(`Battle ${key}: `);
-      if (battles[key].player1.socket != undefined) {
-        log("Player 1 id: " + battles[key].player1.socket.id);
-      }
-      if (battles[key].player2.socket != undefined) {
-        log("Player 2 id: " + battles[key].player2.socket.id);
-      }
+      log("Player 1 id: " + battles[key].player1.socket.id);
+      log("Player 2 id: " + battles[key].player2.socket.id);
     });
   log();
 };

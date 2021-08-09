@@ -1,16 +1,11 @@
 const Stat = require("../Stat");
 const Action = require("../Action");
 const Modifier = require("../Modifier");
+const {applyChance, applyStandardDamage} = require('../../modules/calculation-tools');
+const initStatsModule = require('../../modules/init-stats');
 
-var initStats = (statsArr) => {
-    statsArr["class"] = new Stat("class", "Rogue");
-    statsArr["hp"] = new Stat("hp", 180);
-    statsArr["armor"] = new Stat("armor", 10);
-    statsArr["magicResist"] = new Stat("magicResist", 5);
-    statsArr["physicalDamage"] = new Stat("physicalDamage", 50);
-    statsArr["magicDamage"] = new Stat("magicDamage", 0);
-    statsArr["dodgeChance"] = new Stat("dodgeChance", 0.15);
-    statsArr["critChance"] = new Stat("critChance", 0.6);
+var initStats = statsArr => {
+    initStatsModule(statsArr, defaultStats, uniqueStats);
 }
 
 var initModifiers = (hero, battle, turnToStart) => {
@@ -19,7 +14,7 @@ var initModifiers = (hero, battle, turnToStart) => {
 
 var initActions = (actionsArr) => {
     actionsArr["daggerStab"] = new Action("daggerStab", 3, (attacker, defender, battle) => {
-        let damageResult = Action.applyStandardDamage(attacker, defender, constants["daggerStabMax"], constants["daggerStabMin"], "armor", constants["daggerStabADScaling"], 0);
+        let damageResult = applyStandardDamage(attacker, defender, constants["daggerStabMax"], constants["daggerStabMin"], "armor", constants["daggerStabADScaling"], 0);
         let damageDealt = damageResult.damageDealt;
 
         if (damageResult.crit === 1) {
@@ -101,6 +96,19 @@ constants["daggerStabADScaling"] = 0.4;
 
 constants["excuteDamage"] = 80;
 
+//STATS CONSTANTS
+const defaultStats = [];
+//default
+defaultStats["hp"] = 180;
+defaultStats["armor"] = 10;
+defaultStats["magicResist"] = 5;
+defaultStats["physicalDamage"] = 50;
+defaultStats["magicDamage"] = 0;
+defaultStats["dodgeChance"] = 0.15;
+defaultStats["critChance"] = 0.6;
+
+//unique
+const uniqueStats = [];
 
 module.exports = {
     initStats: initStats,
