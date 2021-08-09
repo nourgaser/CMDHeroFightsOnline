@@ -1,122 +1,58 @@
 using H.Socket.IO;
-using Newtonsoft.Json;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
-public static class NetworkManager
+using UnityEngine.SceneManagement;
+public class NetworkManager : MonoBehaviour
 {
-    private static readonly System.Uri url = new System.Uri("http://192.168.1.105:8080/socket.io/");
-
-    public static SocketIoClient client;
-
-    //private static bool isTurn = false;
-    public static bool shouldLoadBattle = false;
-
-    private static event System.EventHandler ReconnectNeeded;
-    static NetworkManager()
+    private readonly System.Uri url = new System.Uri("http://192.168.1.104:8080/socket.io/");
+    public static SocketIoClient socket;
+    public bool shouldLoadBattle = false;
+    private event System.EventHandler ReconnectNeeded;
+    //public static event System.EventHandler SocketInitialized;
+    void Awake()
     {
-        ReconnectNeeded += (sender, e) =>
-        {
-            connect();
-        };
-        connect();
+        ReconnectNeeded += connect;
+        connect(null, null);
+        //SocketInitialized += (sender, e) => { };
     }
-
-    private static void initClient()
+    private void initSocket()
     {
-        client = new SocketIoClient();
-        client.Disconnected += Client_Disconnected;
-        client.On("checkConnection", e =>
+        Debug.Log("initializing socket");
+        socket = new SocketIoClient();
+        socket.Disconnected += Client_Disconnected;
+        socket.Connected += (sender, e) =>
         {
-            client.Emit("checkConnection", "");
+            Debug.Log("Connected...");
+        };
+        socket.On("checkConnection", e =>
+        {
+            socket.Emit("checkConnection", "");
         });
-        client.On("startBattle", (e) =>
+        socket.On("startBattle", (e) =>
         {
-            addBattleListerners();
             shouldLoadBattle = true;
             Debug.Log("starting battle");
         });
 
-        client.On("backToMainLobby", (e) =>
+        socket.On("backToMainLobby", (e) =>
         {
 
         });
+        //SocketInitialized.Invoke(null, null);
     }
-
-    private static void addBattleListerners()
-    {
-        client.On("actions", (e) =>
-        {
-            List<Action> actions = JsonConvert.DeserializeObject<List<Action>>(e);
-            Hero.actions = actions;
-            ActionButtons.ActionButtonsManager.actionsChanged = true;
-        });
-        client.On("yourStats", (e) =>
-        {
-            List<Stat> stats = JsonConvert.DeserializeObject<List<Stat>>(e);
-            Hero.stats = stats;
-            UI.UIManager.statsChanged = true;
-        });
-        client.On("opponentStats", (e) =>
-        {
-            List<Stat> stats = JsonConvert.DeserializeObject<List<Stat>>(e);
-            Hero.opponentStats = stats;
-            UI.UIManager.statsChanged = true;
-        });
-        client.On("turnStarted", (e) =>
-        {
-            Debug.Log("Your turn!");
-            //isTurn = true;
-        });
-        client.On("actionTaken", (e) =>
-        {
-            Debug.Log(e);
-            UI.UIManager.textToDisplay = e;
-            UI.UIManager.textToDisplayChanged = true;
-        });
-        client.On("turnEnded", (e) =>
-        {
-            Debug.Log("Your turn ended.");
-            //isTurn = false;
-        });
-        client.On("battleWon", (e) =>
-        {
-            Debug.Log(e);
-            removeMatchListeners();
-        });
-        client.On("battleLost", (e) =>
-        {
-            Debug.Log(e);
-            removeMatchListeners();
-        });
-        Debug.Log("Battle listeners added!");
-    }
-
-    private static void removeMatchListeners()
-    {
-        client.Off("actions");
-        client.Off("yourStats");
-        client.Off("opponentStats");
-        client.Off("turnStarted");
-        client.Off("actionTaken");
-        client.Off("turnEnded");
-        client.Off("battleWon");
-        client.Off("battleLost");
-        client.Emit("backToMainLobby", "");
-    }
-
-    private static void Client_Disconnected(object sender, H.WebSockets.Args.WebSocketCloseEventArgs e)
+    private void Client_Disconnected(object sender, H.WebSockets.Args.WebSocketCloseEventArgs e)
     {
         Debug.Log("Disconnected!");
+        socket.Disconnected -= Client_Disconnected;
         ReconnectNeeded.Invoke(null, null);
     }
-
-    private static async void connect()
+    private async void connect(object sender, EventArgs e)
     {
         Debug.Log("Attempting to connect to the server...");
-        initClient();
+        initSocket();
         try
         {
-            await client.ConnectAsync(url);
+            await socket.ConnectAsync(url);
             Debug.Log("Connected successfully!");
         }
         catch
@@ -124,5 +60,24 @@ public static class NetworkManager
             Debug.Log("Failed to connect to the server...");
             ReconnectNeeded.Invoke(null, null);
         }
+    }
+    private void Update()
+    {
+        if (shouldLoadBattle)
+        {
+            shouldLoadBattle = false;
+            DontDestroyOnLoad(gameObject);
+            AsyncOperation loadBattle = SceneManager.LoadSceneAsync("BattleScene");
+            loadBattle.completed += (e) =>
+            {
+                SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetSceneByName("BattleScene"));
+            };
+        }
+    }
+    private void OnApplicationQuit()
+    {
+        ReconnectNeeded -= connect;
+        socket.DisconnectAsync();
+        socket.Dispose();
     }
 }

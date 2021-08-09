@@ -23,7 +23,6 @@ var initModifiers = (hero, battle, turnParity) => {
     var gainMana = () => {
         if (battle.turnCounter % 2 === turnParity % 2) {
             hero.stats["mana"].value += 50;
-            battle.emitAllStats();
             //emit result
         }
     }
@@ -66,8 +65,6 @@ var initActions = actionsArr => {
             if (battle.turnCounter % 2 !== startTurn % 2) {
                 defender.stats["hp"].value -= 30;
 
-                //emit to client DOT message.
-                battle.emitAllStats();
             }
 
             if (battle.turnCounter == startTurn + duration) {
@@ -139,13 +136,11 @@ var initActions = actionsArr => {
             values["initialHP"] = attacker.stats["hp"].value;
             attacker.stats["hp"].modifiers["shield"] = new Modifier("Shielded!", "shield", values, battle.turnCounter, 99, "Shielded after gathering mana.");
             attacker.stats["hp"].value += values["shield"];
-            battle.emitAllStats();
             var shieldDestroyed = () => {
                 if (attacker.stats["hp"].value <= attacker.stats["hp"].modifiers["shield"].values["initialHP"]) {
                     delete attacker.stats["hp"].modifiers["shield"];
                     battle.gameController.removeListener("advanceTurnStartedModifiers", shieldDestroyed);
                     battle.gameController.removeListener("advancePostActionModifiers", shieldDestroyed);
-                    battle.emitAllStats();
                 }
                 else {
                     attacker.stats["hp"].modifiers["shield"].values["shield"] = attacker.stats["hp"].value - attacker.stats["hp"].modifiers["shield"].values["initialHP"];

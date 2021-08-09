@@ -17,20 +17,33 @@ class Battle {
     turnTimerLastChecked = 0;
     battleEnded = false;
 
-
-    disconnectedPlayer;
-
     constructor(player1, player2) {
         this.player1 = player1;
         this.player2 = player2;
-
         this.startBattle();
-        //this.test();
     }
 
     /*battle setup: initialization and adding gameController listeners, 
     then signaling for first turn to start the turn loop*/
     startBattle() {
+        this.player1.socket.on("statsRequested", () => {
+            this.player1.emitStats();
+            this.player2.emitOpponentStats(this.player1);
+        });
+        this.player2.socket.on("statsRequested", () => {
+            this.player2.emitStats();
+            this.player1.emitOpponentStats(this.player2);
+
+        });
+        this.player1.socket.on("availableActionsRequested", () => {
+            this.player1.emitAvailableActions(this.player2);
+
+        });
+        this.player2.socket.on("availableActionsRequested", () => {
+            this.player2.emitAvailableActions(this.player1);
+
+        });
+
         this.attacker = this.player1;
         this.defender = this.player2;
         this.attacker.isTurn = true;
@@ -40,11 +53,10 @@ class Battle {
         AllClasses.classes[this.defender.classID].initModifiers(this.defender, this, this.turnCounter + 1);
 
         this.gameController.on('advanceTurn', () => {
-            console.log("GameController: Adcancing turn...");
-            if (this.attacker.socket != null) {
-                this.attacker.socket.removeAllListeners('action');
-                this.attacker.socket.emit('turnEnded', "");
-            }
+            console.log("GameController: Advancing turn...");
+            this.attacker.socket.removeAllListeners('action');
+            this.attacker.socket.emit('turnEnded', "");
+
 
             this.gameController.emit('advanceTurnEndedModifiers', "");
 
@@ -70,24 +82,18 @@ class Battle {
 
         this.gameController.on('endBattle', (winner, loser) => {
             this.battleEnded = true;
-            if (winner.socket != null) {
-                winner.socket.emit('battleWon', "You win!");
-            }
-            if (loser.socket != null) {
-                loser.socket.emit('battleLost', "You lose :(");
-            }
+            winner.socket.emit('battleWon', "You win!");
+
+            loser.socket.emit('battleLost', "You lose :(");
+
             clearInterval(this.turnTimer);
-            if (this.attacker.socket != null) {
-                this.attacker.socket.removeAllListeners('turnEnded');
-            }
+            this.attacker.socket.removeAllListeners('turnEnded');
+
             this.gameController.emit('battleEnded', "");
         });
         this.gameController.on('actionTaken', () => {
             if (this.attacker.stats["moves"].value > 0) {
                 this.takeAction();
-            }
-            else {
-                this.attacker.emitAvailableActions(this.defender);
             }
         });
 
@@ -101,16 +107,13 @@ class Battle {
                 this.attacker.socket.once('turnEnded', () => {
                     this.gameController.emit('advanceTurn');
                 });
-                this.emitAllStats();
                 this.takeAction();
             }
             else {
                 this.defender = player;
                 console.log("battle says: player reconnected as defender");
-                this.emitAllStats();
             }
         });
-        this.defender.emitAvailableActions(this.attacker);
         this.takeTurn();
     }
 
@@ -119,23 +122,21 @@ class Battle {
         this.attacker.stats["moves"].value = this.moves;
         this.attacker.addDefaultTurnActions();
         this.gameController.emit('defaultActionsAdded', "");
+        this.defender.socket.emit('turnStarted', "");
 
-        if (this.attacker.socket != null) {
-            this.attacker.socket.emit('turnStarted', "");
-            this.attacker.socket.once('turnEnded', () => {
-                clearInterval(this.turnTimer);
-                this.gameController.emit('advanceTurn');
-            });
-            this.emitAllStats();
-            this.takeAction();
-        }
+        this.attacker.socket.emit('turnStarted', "1");
+        this.attacker.socket.once('turnEnded', () => {
+            clearInterval(this.turnTimer);
+            this.gameController.emit('advanceTurn');
+        });
+        this.takeAction();
 
         this.startTurnTimer();
+
     }
 
     //emit the available actions to the attacker client and listen for their action and invoke it
     takeAction() {
-        this.attacker.emitAvailableActions(this.defender);
         if (this.attacker.socket.listenerCount('action') != 0) {
             this.attacker.socket.removeAllListeners('action');
         }
@@ -152,27 +153,13 @@ class Battle {
 
             if (this.defender.stats["hp"].value <= 0) {
                 this.defender.stats["hp"].value = 0;
-                this.emitAllStats();
                 this.gameController.emit('endBattle', this.attacker, this.defender);
             }
             if (this.checkMatchEnded());
             else {
-                this.emitAllStats();
                 this.gameController.emit('actionTaken');
             }
         });
-    }
-
-    //sends all stats to both players
-    emitAllStats() {
-        if (this.attacker.socket != null) {
-            this.attacker.emitStats();
-            this.defender.emitOpponentStats(this.attacker);
-        }
-        if (this.defender.socket != null) {
-            this.attacker.emitOpponentStats(this.defender);
-            this.defender.emitStats();
-        }
     }
     checkMatchEnded() {
         let ended = false;
@@ -186,7 +173,6 @@ class Battle {
             this.gameController.emit('endBattle', this.defender, this.attacker);
             ended = true
         }
-        this.emitAllStats();
         this.battleEnded = ended;
         return ended;
     }

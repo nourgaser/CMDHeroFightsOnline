@@ -42,7 +42,6 @@ var initActions = (actionsArr) => {
 
                     if (battle.turnCounter % 2 !== startTurn % 2) {
                         defender.stats["hp"].value -= defender.stats["hp"].modifiers["poison"].values["damage"];
-                        battle.emitAllStats();
                     }
                     if (battle.turnCounter == startTurn + duration) {
                         battle.gameController.removeListener('advanceTurnStartModifiers', poison);

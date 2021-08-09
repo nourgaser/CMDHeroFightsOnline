@@ -11,7 +11,7 @@ public class QueueIn : MonoBehaviour
     {
         GameObject.Find("cancelButton").GetComponent<Button>().onClick.AddListener(() =>
         {
-            NetworkManager.client.Emit("queuedOut", "");
+            NetworkManager.socket.Emit("queuedOut", "");
             queueElapsedTime.reset();
             queuePanel.SetActive(false);
         });
@@ -20,7 +20,7 @@ public class QueueIn : MonoBehaviour
         {
             choice.GetComponent<Button>().onClick.AddListener(() =>
             {
-                NetworkManager.client.Emit("queuedIn", choice.GetComponentInChildren<TextMeshProUGUI>().text);
+                NetworkManager.socket.Emit("queuedIn", choice.GetComponentInChildren<TextMeshProUGUI>().text);
                 queuePanel.SetActive(true);
             });
         }

@@ -10,7 +10,7 @@ namespace ActionButtons
         private Button endTurnButton;
         private List<Button> actionButtons = new List<Button>();
         //private Button btn;
-        private SocketIoClient client = NetworkManager.client;
+        private SocketIoClient socket = NetworkManager.socket;
 
         public static bool actionsChanged = false;
 
@@ -25,19 +25,9 @@ namespace ActionButtons
             //btn = GetComponent<Button>();
         }
 
-        // Start is called before the first frame update
-        void Start()
-        {
-            
-            //btn.onClick.AddListener(() =>
-            //{
-            //    networking.client.Emit("action", "swingSword");
-            //    Debug.Log("Button clicked");
-            //});
-        }
-
         public void updateActionButtons()
         {
+            Debug.Log("actionButtons updated!");
             actionButtons.ForEach(button =>
             {
                 button.transform.GetChild(0).gameObject.GetComponent<Text>().text = "";
@@ -52,8 +42,8 @@ namespace ActionButtons
                 actionButtons[i].onClick.RemoveAllListeners();
                 actionButtons[i].onClick.AddListener(() =>
                 {
-                    client.Emit("action", action.name);
-                    //actionButtons[i].transform.gameObject.SetActive(false);
+                    socket.Emit("action", action.name);
+                    actionButtons[i].transform.gameObject.SetActive(false);
                     Debug.Log("Button clicked");
                 }); 
                 i++;
@@ -62,7 +52,7 @@ namespace ActionButtons
             endTurnButton.onClick.RemoveAllListeners();
             endTurnButton.onClick.AddListener(() =>
             {
-                client.Emit("turnEnded");
+                socket.Emit("turnEnded");
                 Debug.Log("Ending turn..");
                 endTurnButton.interactable = false;
             });
@@ -74,8 +64,8 @@ namespace ActionButtons
         {
             if (actionsChanged)
             {
-                updateActionButtons();
                 actionsChanged = false;
+                updateActionButtons();
             }
         }
     }

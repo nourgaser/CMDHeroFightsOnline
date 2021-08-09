@@ -11,7 +11,6 @@ const log = console.log;
 const mainLobby = []; //socket.id -> socket
 const playerQueue = []; //socket.id -> hero
 const battles = []; //battle.id -> battle
-const disconnectedClients = []; //socket.conn.remoteAddress -> custom disconnected client data object
 
 const localEventEmitter = new EventEmitter();
 
@@ -22,69 +21,19 @@ io.on("connection", (socket) => {
     writable: true,
   });
 
-  socket.emit("message", "You connected successfully!");
-
   //new connection
-  if (disconnectedClients[socket.conn.remoteAddress] == undefined) {
-    log();
-    log(`=====New client connected: ${socket.conn.remoteAddress}=====`);
-    log();
+  log(`=====New client connected: ${socket.conn.remoteAddress}=====`);
 
-    moveSocketToMainLobby(socket);
-  }
+  moveSocketToMainLobby(socket);
 
-  //reconnection
-  else {
-    log(`=====Old client reconnecting: ${socket.conn.remoteAddress}=====`);
-    let oldClient = disconnectedClients[socket.conn.remoteAddress];
-    let oldLocation = oldClient.location;
-    if (oldLocation === "battle") {
-      if (battles[oldClient.battle.id] != undefined) {
-        let battle = battles[oldClient.battle.id];
-        socket.battleID = battle.id;
-
-        let reconnectingPlayer;
-        let playerNumber;
-
-        if (oldClient.playerNumber == 1) {
-          playerNumber = 1;
-          reconnectingPlayer = battle.player1;
-        } else {
-          playerNumber = 2;
-          reconnectingPlayer = battle.player2;
-        }
-        reconnectingPlayer.socket = socket;
-        reconnectingPlayer.socket.emit("startBattle", "");
-        log("Reconnected on player " + playerNumber);
-        battle.gameController.emit("reconnect", reconnectingPlayer);
-        logCounts();
-      }
-      else {
-        moveSocketToMainLobby(socket);
-      }
-    }
-    else {
-      moveSocketToMainLobby(socket);
-    }
-
-    delete disconnectedClients[socket.conn.remoteAddress];
-  }
-
-  socket.on("backToMainLobby", () => {
-    socket.battleID = undefined;
-    moveSocketToMainLobby(socket);
-    socket.emit("backToMainLobby", "");
-  });
-
-  socket.once("disconnect", () => {
+  socket.on("disconnect", () => {
     onDisconnect(socket);
-    //DEBUG
-    logCounts();
   });
 
-  setTimeout(() => {
-    createCheckConnectionInterval(socket);
-  }, 2000);
+  //handshake every so often to make sure client is there, disconnects them if no response arrives.
+  // setTimeout(() => {
+  //   createCheckConnectionInterval(socket);
+  // }, 5000);
 });
 
 localEventEmitter.on("battleStarted", (battle) => {
@@ -116,24 +65,24 @@ localEventEmitter.on("queueAppended", () => {
 });
 
 var createBattle = (p1, p2) => {
-  
+
   var b = new Battle(p1, p2);
   Object.defineProperty(b, "id", {
     value: uniqueID(),
     writable: false,
   });
-  
+
   //adding the battle ID to both players.
   p1.socket.battleID = b.id;
   p2.socket.battleID = b.id;
-  
+
   log();
   log("=====New battle started!=====");
   log("Player 1 battle ID:" + p1.socket.battleID);
   log("Player 2 battle ID:" + p2.socket.battleID);
   log("Battle ID:" + b.id);
   log();
-  
+
   battles[b.id] = b;
   localEventEmitter.emit("battleStarted", b);
   p1.socket.emit("startBattle", "");
@@ -146,12 +95,12 @@ var moveSocketToMainLobby = (socket) => {
   log(`Moving socket ${socket.id} to lobby. BattleID: ${socket.battleID}.`);
   log();
   //DEBUG
-  logCounts();
+  setTimeout(logCounts, 100);
 };
 
 var addQueueListeners = (socket) => {
   socket.once("queuedIn", (classID) => {
-    playerQueue[socket.id] =  new Hero(classID, socket);
+    playerQueue[socket.id] = new Hero(classID, socket);
     delete mainLobby[socket.id];
     //DEBUG
     logCounts();
@@ -210,7 +159,10 @@ var onDisconnect = (socket) => {
       log("Unknown error");
     }
   }
+  socket.removeAllListeners();
+  socket.disconnect();
   delete socket;
+  logCounts();
 };
 
 var createCheckConnectionInterval = (socket) => {
@@ -225,19 +177,16 @@ var createCheckConnectionInterval = (socket) => {
       //log("Checking connection on " + socket.conn.remoteAddress);
       setTimeout(() => {
         if (!responded) {
+          log(socket.conn.remoteAddress + " is not responding. Disconnecting now.");
           onDisconnect(socket);
-          socket.removeAllListeners();
-          socket.disconnect();
           clearInterval(interval);
-          delete socket;
         }
-      }, 900);
+      }, 999);
     } else {
-      log(socket.conn.remoteAddress + " is not connected. Deleting now.");
-      socket.removeAllListeners();
-      socket.disconnect();
+      log(socket.conn.remoteAddress + " is not connected. Disconnecting now.");
+      onDisconnect(socket);
       clearInterval(interval);
-      delete socket;
+      logCounts();
     }
   }, 1000);
 };
@@ -276,8 +225,8 @@ var logCounts = () => {
   log();
 };
 
-setInterval(() => {
-  logCounts();
-}, 15000);
+// setInterval(() => {
+//   logCounts();
+// }, 15000);
 
 log("Now listening on 8080...");
